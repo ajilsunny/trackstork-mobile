@@ -421,7 +421,7 @@ $ed = $_REQUEST['ed'];
             })
         })
 
-        $('#warehouse').on('change',function(){
+        $('#warehouse,#rtwh').on('change',function(){
             $('#save_route').attr('disabled',true)
         })
 

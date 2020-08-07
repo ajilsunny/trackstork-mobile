@@ -229,7 +229,7 @@ if (isset($_REQUEST['fx'])) {
     case 34:
       $wtid = $_REQUEST['wtid'];
       $desp_id = $_REQUEST['desp_id'];
-      $res = addItemToDriver($wtid,$desp_id);
+      $res = addItemsToDriver($wtid,$desp_id);
       echo $res;
       break; 
     case 35:

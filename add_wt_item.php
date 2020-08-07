@@ -156,16 +156,17 @@ $wtid = $_REQUEST['wid'];
             
         } else { 
             var wtid = <?php echo json_encode($wtid); ?>;
-            console.log(desp_id);
+            // console.log(desp_id);
             $.ajax({
                 url:"router.php",
                 method:"post",
                 dataType:"json",
                 data:{fx:34,desp_id:desp_id,wtid:wtid},
-                success:function(data){
-                    if(data==1){
-                        window.location.href = 'view_waytrip.php';
-                    }
+                success:function(data) {
+                //     if(data==1){
+                //         window.location.href = 'view_waytrip.php';
+
+                //     }
                 }
             })
         }

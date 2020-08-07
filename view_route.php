@@ -91,6 +91,7 @@ $wid = $_GET['wid'];
         <!--  END CONTENT AREA  -->
     </div>
     <!-- END MAIN CONTAINER -->
+    
 
     <!-- BEGIN GLOBAL MANDATORY STYLES -->
     <script src="assets/js/libs/jquery-3.1.1.min.js"></script>
