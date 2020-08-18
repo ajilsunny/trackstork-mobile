@@ -13,7 +13,7 @@ if (isset($_REQUEST['fx'])) {
       echo $res;
       break;
     case 2:
-      $isedit = $_REQUEST['isedit']; 
+      $isedit = $_REQUEST['isedit'];
       $oid = $_REQUEST['oid'];
       $name = $_REQUEST['name'];
       $cper = $_REQUEST['cper'];
@@ -157,7 +157,7 @@ if (isset($_REQUEST['fx'])) {
     case 24:
       $wtid = $_REQUEST['wtid'];
       $wid = $_REQUEST['wid'];
-      $res = delWaytripItems($wtid,$wid);
+      $res = delWaytripItems($wtid, $wid);
       echo $res;
       break;
     case 25:
@@ -166,7 +166,7 @@ if (isset($_REQUEST['fx'])) {
       echo $res;
       break;
     case 26:
-      $cid= $_REQUEST['custId'];
+      $cid = $_REQUEST['custId'];
       $res = getNewRoute($cid);
       echo $res;
       break;
@@ -198,13 +198,13 @@ if (isset($_REQUEST['fx'])) {
       $cid = $_REQUEST['cid'];
       $lat = $_REQUEST['lat'];
       $long = $_REQUEST['lng'];
-      $res = aeCustomerLatlong($chgf,$cid,$lat,$long);
+      $res = aeCustomerLatlong($chgf, $cid, $lat, $long);
       echo $res;
       break;
     case 32:
       $checkedArr = [];
       $saveRouteId = $_REQUEST['saveRouteId'];
-      if(isset($_REQUEST['checkedArr'])){
+      if (isset($_REQUEST['checkedArr'])) {
         $checkedArr = $_REQUEST['checkedArr'];
       }
       $tempLatlong = $_REQUEST['tempLatlong'];
@@ -219,22 +219,27 @@ if (isset($_REQUEST['fx'])) {
       $eta = $_REQUEST['eta'];
       $pointDistance = $_REQUEST['pointDistance'];
       $pointTime = $_REQUEST['pointTime'];
-      $res = saveRoute ($saveRouteId,$checkedArr,$tempLatlong,$whId,$wtId,$rtwh,$enTraffic,$totalDistance,$avgSpeed,$detTime,$totalRouteTime,$eta,$pointDistance,$pointTime);
+      $res = saveRoute($saveRouteId, $checkedArr, $tempLatlong, $whId, $wtId, $rtwh, $enTraffic, $totalDistance, $avgSpeed, $detTime, $totalRouteTime, $eta, $pointDistance, $pointTime);
       echo $res;
       break;
     case 33:
-      $res = getUnAssignedItems() ;
+      $res = getUnAssignedItems();
       echo $res;
       break;
     case 34:
       $wtid = $_REQUEST['wtid'];
       $desp_id = $_REQUEST['desp_id'];
-      $res = addItemsToDriver($wtid,$desp_id);
+      $res = addItemsToDriver($wtid, $desp_id);
       echo $res;
-      break; 
+      break;
     case 35:
       $wid = $_REQUEST['wid'];
       $res = getRoute($wid);
+      echo $res;
+      break;
+    case 36:
+      $desp_id = $_REQUEST['desp_id'];
+      $res = getLocationOfAddItems($desp_id);
       echo $res;
       break;
     default:
@@ -242,4 +247,3 @@ if (isset($_REQUEST['fx'])) {
       break;
   }
 }
-
