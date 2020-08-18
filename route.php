@@ -129,7 +129,7 @@ $ed = $_REQUEST['ed'];
                                 <div class="row ml-2 mt-2 controls">
                                     <div class="form-group col-3">
                                         <div>
-                                            <input type="checkbox" id="rtwh" value="1" <?php if(isset($route['return_to_warehouse']) && $route['return_to_warehouse']==1) { echo 'checked'; } ?> ></input>
+                                            <input type="checkbox" id="rtwh" value="1" <?php if(isset($route['return_to_warehouse']) && $route['return_to_warehouse']==0) { echo ''; } else { echo 'checked';} ?> ></input>
                                             <label> Return to warehouse</label>
                                         </div>
                                         <div>
@@ -421,7 +421,7 @@ $ed = $_REQUEST['ed'];
             })
         })
 
-        $('#warehouse').on('change',function(){
+        $('#warehouse,#rtwh').on('change',function(){
             $('#save_route').attr('disabled',true)
         })
 
@@ -580,8 +580,6 @@ $ed = $_REQUEST['ed'];
             // console.log(whLatlong,"wh");
             $('#spinner').css('display','block')
             pointDistance = [];
-
-            
 
             var warehouseId = $('#warehouse option:selected').val();
             var whLatlong = '';

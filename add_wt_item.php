@@ -1,8 +1,8 @@
-<?php 
+<?php
 include('includes/title.php');
 include('helper.php');
 $con = con();
-$oid=$_SESSION['org'];
+$oid = $_SESSION['org'];
 $wtid = $_REQUEST['wid'];
 ?>
 <link href="assets/css/scrollspyNav.css" rel="stylesheet" type="text/css" />
@@ -27,8 +27,8 @@ $wtid = $_REQUEST['wid'];
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js">
 
 
-    
-    
+
+
 
 
 </head>
@@ -37,7 +37,7 @@ $wtid = $_REQUEST['wid'];
 
     <!--  BEGIN NAVBAR  -->
     <div class="header-container fixed-top">
-        <?php include('includes/header.php');?>
+        <?php include('includes/header.php'); ?>
     </div>
     <!--  END NAVBAR  -->
 
@@ -76,6 +76,13 @@ $wtid = $_REQUEST['wid'];
                                         <button type="cancel" class="btn btn-dark" id="btn-assign">Assign</button>
                                     </div>
                                 </div>
+                                <!-- Loader -->
+                                <div class="align-center mt-5 display-none" id="spinner">
+                                    <div class="spinner-border position-absolute" role="status">
+                                    <!-- <span class="sr-only">Loading...</span> -->
+                                    </div>
+                                </div>
+                                <!-- // Loader -->
                                 <div class="table-responsive mb-4 mt-4">
                                     <table id="dttable" class="table table-hover non-hover" style="width:100%">
 
@@ -116,176 +123,199 @@ $wtid = $_REQUEST['wid'];
     <script src="plugins/sweetalerts/sweetalert2.min.js"></script>
     <script src="plugins/sweetalerts/custom-sweetalert.js"></script>
     <script>
-    
+        var desp_id = [];
+        var inichkAllbox = [];
 
-    var desp_id = [];
-    var inichkAllbox = [];
-
-    $("#dttable").on('click','#selectAll',function() {
-        $("input[type=checkbox]").prop('checked', $(this).prop('checked'));
-        if($(this).prop('checked')==true){
-            desp_id = inichkAllbox;
-        }else{
-            desp_id = [];
-        }
-    });
-    $("#dttable").on('click','input[type=checkbox]',function() {
-        if (!$(this).prop("checked")) {
-            $("#selectAll").prop("checked", false);
-            // let chkdVal = $(this).val();
-            // console.log(chkdVal,'Checked')
-            // let tempArr = allChecked.filter(val => val !== chkdVal)
-            // allChecked = tempArr
-        }
-    });
+        $("#dttable").on('click', '#selectAll', function() {
+            $("input[type=checkbox]").prop('checked', $(this).prop('checked'));
+            if ($(this).prop('checked') == true) {
+                desp_id = inichkAllbox;
+            } else {
+                desp_id = [];
+            }
+        });
+        $("#dttable").on('click', 'input[type=checkbox]', function() {
+            if (!$(this).prop("checked")) {
+                $("#selectAll").prop("checked", false);
+                // let chkdVal = $(this).val();
+                // console.log(chkdVal,'Checked')
+                // let tempArr = allChecked.filter(val => val !== chkdVal)
+                // allChecked = tempArr
+            }
+        });
 
 
-    $('#dttable').on('click','.chk',function(event) {
-        if(event.target.checked) {
-            desp_id.push(event.target.value);
-        }
-        else{
-            let tempArr = desp_id.filter(val => val !== event.target.value);
-            desp_id = tempArr;
-
-        }
-    }); 
-    $('#btn-assign').on('click',function() {
-        if(desp_id.length<1) {
-            alert('No orders have been selected');
-            
-        } else { 
-            var wtid = <?php echo json_encode($wtid); ?>;
-            console.log(desp_id);
-            $.ajax({
-                url:"router.php",
-                method:"post",
-                dataType:"json",
-                data:{fx:34,desp_id:desp_id,wtid:wtid},
-                success:function(data){
-                    if(data==1){
-                        window.location.href = 'view_waytrip.php';
-                    }
-                }
-            })
-        }
-    })
- 
-
- 
-
-    $("#u_count").TouchSpin({
-        initval: 5
-    });
-
-    $(document).ready(function() {
-        App.init();
-    });
-    
-    var table='';
-    function getorgs() {
-        $.ajax({
-            url: "router.php",
-            type: 'post',
-            dataType: "json",
-            data: {
-                fx: 33
-            },
-            success: function(data) {
-                
-                table = $('#dttable').DataTable({
-                    dom: '<"row"<"col-md-12"<"row"<"col-md-5"B><"col-md-5"f><"col-md-1"l> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
-                    buttons: {
-                        buttons: [{
-                                extend: 'copy',
-                                className: 'btn'
-                            },
-
-                            {
-                                extend: 'excel',
-                                className: 'btn'
-                            },
-
-                        ]
-                    },
-                    "oLanguage": {
-                        "oPaginate": {
-                            "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
-                            "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>'
-                        },
-                        "sInfo": "Showing page _PAGE_ of _PAGES_",
-                        "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
-                        "sSearchPlaceholder": "Search...",
-                        "sLengthMenu": "Results :  _MENU_",
-                    },
-                    "stripeClasses": [],
-                    "lengthMenu": [5, 10, 20, 50],
-                    "pageLength": 10,
-                    "stateSave": true,
-                    destroy: true,
-                    aaSorting: [
-                        [0, 'asc']
-                    ],
-                    data: data,
-                    columnDefs: [ {
-                        orderable: false,
-                        className: 'select-checkbox',
-                        targets:   0
-                    } ],
-                    select: {
-                        style:    'os',
-                        selector: 'td:first-child'
-                    },
-                    order: [[ 1, 'asc' ]],
-                    columns: [
-                        {
-                            title: '<input type="checkbox" id="selectAll" />',
-                            data: 'flag',
-                            "render": function(data, type, row) { 
-                                
-                                if(data==1) {
-                                    return '';
-                                }else{
-                                    if(!inichkAllbox.includes(row.despatch_id)){
-                                        inichkAllbox.push(row.despatch_id)
-                                     };
-                                    
-                                    return '<input type="checkbox" class="chk" value="' + row.despatch_id + '" id="chk">';
-                                    
-                                }
-                            },
-                            width: "5%"
-                        },
-                        
-                        {
-                            title: "Customer Name",
-                            data: 'cust_name',
-                            width: "25%"
-                        },
-                        {
-                            title: "id",
-                            data: 'despatch_id',
-                            width: "25%"
-                        },
-                        {
-                            title: "Order Number",
-                            data: 'order_no',
-                            width: "25%"
-                        },
-                        {
-                            title: "Remarks",
-                            data: 'remarks',
-                            width: "25%"
-                        },
-
-                    ]
-                });
+        $('#dttable').on('click', '.chk', function(event) {
+            if (event.target.checked) {
+                desp_id.push(event.target.value);
+            } else {
+                let tempArr = desp_id.filter(val => val !== event.target.value);
+                desp_id = tempArr;
 
             }
         });
-    }
-    getorgs();
+        $('#btn-assign').on('click', function() { 
+            $('#spinner').css('display','block')
 
+            if (desp_id.length < 1) {
+                alert('No orders have been selected');
+
+            } else {
+                $.ajax({
+                    url: 'router.php',
+                    method: 'post',
+                    dataType: 'json',
+                    data: {
+                        fx: 36,
+                        desp_id: desp_id
+                    },
+                    success: function(data) {
+                        var cust_name = [];
+                        cust_name = data;
+                        if (cust_name.length != 0) {
+                            alert(`Please add location for ${cust_name.length > 1 ?`customers :${cust_name.join(",")}`:`the customer :${cust_name}`}`);
+                        } else {
+                            var wtid = <?php echo json_encode($wtid); ?>;
+                            
+                            $.ajax({
+                                url: "router.php",
+                                method: "post",
+                                dataType: "json",
+                                data: {
+                                    fx: 34,
+                                    desp_id: desp_id,
+                                    wtid: wtid
+                                },
+                                success: function(data) {
+                                    if (data == 1) {
+                                        window.location.href = 'view_waytrip.php';
+                                    }
+                                }
+                            })
+                        }
+
+                    }
+                })
+
+            }
+        })
+
+
+
+
+        $("#u_count").TouchSpin({
+            initval: 5
+        });
+
+        $(document).ready(function() {
+            App.init();
+        });
+
+        var table = '';
+
+        function getorgs() {
+            $.ajax({
+                url: "router.php",
+                type: 'post',
+                dataType: "json",
+                data: {
+                    fx: 33
+                },
+                success: function(data) {
+
+                    table = $('#dttable').DataTable({
+                        dom: '<"row"<"col-md-12"<"row"<"col-md-5"B><"col-md-5"f><"col-md-1"l> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+                        buttons: {
+                            buttons: [{
+                                    extend: 'copy',
+                                    className: 'btn'
+                                },
+
+                                {
+                                    extend: 'excel',
+                                    className: 'btn'
+                                },
+
+                            ]
+                        },
+                        "oLanguage": {
+                            "oPaginate": {
+                                "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
+                                "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>'
+                            },
+                            "sInfo": "Showing page _PAGE_ of _PAGES_",
+                            "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                            "sSearchPlaceholder": "Search...",
+                            "sLengthMenu": "Results :  _MENU_",
+                        },
+                        "stripeClasses": [],
+                        "lengthMenu": [5, 10, 20, 50],
+                        "pageLength": 10,
+                        "stateSave": true,
+                        destroy: true,
+                        aaSorting: [
+                            [0, 'asc']
+                        ],
+                        data: data,
+                        columnDefs: [{
+                            orderable: false,
+                            className: 'select-checkbox',
+                            targets: 0
+                        }],
+                        select: {
+                            style: 'os',
+                            selector: 'td:first-child'
+                        },
+                        order: [
+                            [1, 'asc']
+                        ],
+                        columns: [{
+                                title: '<input type="checkbox" id="selectAll" />',
+                                data: 'flag',
+                                "render": function(data, type, row) {
+
+                                    if (data == 1) {
+                                        return '';
+                                    } else {
+                                        if (!inichkAllbox.includes(row.despatch_id)) {
+                                            inichkAllbox.push(row.despatch_id)
+                                        };
+
+                                        return '<input type="checkbox" class="chk" value="' + row.despatch_id + '" id="chk">';
+
+                                    }
+                                },
+                                width: "5%"
+                            },
+
+                            {
+                                title: "Customer Name",
+                                data: 'cust_name',
+                                width: "25%"
+                            },
+                            {
+                                title: "id",
+                                data: 'despatch_id',
+                                width: "25%"
+                            },
+                            {
+                                title: "Order Number",
+                                data: 'order_no',
+                                width: "25%"
+                            },
+                            {
+                                title: "Remarks",
+                                data: 'remarks',
+                                width: "25%"
+                            },
+
+                        ]
+                    });
+
+                }
+            });
+        }
+        getorgs();
     </script>
 </body>
 
