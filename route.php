@@ -374,7 +374,6 @@ $ed = $_REQUEST['ed'];
         var saveRouteId = [];
         var totalDistance = '';
         var totalRouteTime = '';
-        var eta = [];
         var pointDistance = [];
         var ifFixed = [];
         var pointTime = [];
@@ -388,17 +387,17 @@ $ed = $_REQUEST['ed'];
             let detTime = $('#detention_time').val();
             let tempArr = pointDistance.filter(val => val !== 0)
             pointDistance = tempArr;
-            pointTime = [];
-            pointDistance.forEach(item => {
-                // time to minutes
-                let tempTime = (item/avgSpeed)*60;
-                tempTime += parseFloat(detTime);
-                // time to seconds
-                tempTime = tempTime*60;
+            // pointTime = [];
+            // pointDistance.forEach(item => {
+            //     // time to minutes
+            //     let tempTime = (item/avgSpeed)*60;
+            //     tempTime += parseFloat(detTime);
+            //     // time to seconds
+            //     tempTime = tempTime*60;
 
-                pointTime.push(tempTime)
+            //     pointTime.push(tempTime)
                 
-            })
+            // })
             
             
             $.ajax({
@@ -407,7 +406,7 @@ $ed = $_REQUEST['ed'];
                 dataType:'json',
                 data:{ fx:32,saveRouteId:saveRouteId,checkedArr:checkedArr,tempLatlong:tempLatlong,whId:warehouseId,wtId:wid,
                        rtwh:rtwh, enTraffic:enTraffic, totalDistance:totalDistance, avgSpeed:avgSpeed, detTime:detTime,totalRouteTime:totalRouteTime,
-                       eta:eta,pointDistance:pointDistance,pointTime:pointTime },
+                       pointDistance:pointDistance,pointTime:pointTime },
                 success:function(data) {
                     if(data==1)
                     swal({
@@ -580,7 +579,9 @@ $ed = $_REQUEST['ed'];
             // console.log(whLatlong,"wh");
             $('#spinner').css('display','block')
             pointDistance = [];
-
+            checkedLatlong = [];
+            uncheckedLatlong = [];
+            
             var warehouseId = $('#warehouse option:selected').val();
             var whLatlong = '';
             $.ajax({
@@ -639,6 +640,7 @@ $ed = $_REQUEST['ed'];
                     method: 'post',
                     contentType: 'application/json',
                     dataType: 'json',
+                    async:false,
                     data: fixedLocations,
                     success: function(fixed) {
                         let distance = fixed.route.legs
@@ -648,6 +650,10 @@ $ed = $_REQUEST['ed'];
                         }
                     }
                     })
+                    let temp = pointDistance.filter(val => val !== 0 )
+                        pointDistance = [...temp]; 
+                    // console.log(pointDistance,"mid");
+
                     // Get distance between fixed points
 
                 } else {
@@ -681,7 +687,13 @@ $ed = $_REQUEST['ed'];
                         for(let i=0;i<distance.length;i++) {
                             pointDistance.push(distance[i]['distance'])
                         }
-                            totalDistance = optdData.route.distance;
+
+                        let temp = pointDistance.filter(val => val !== 0 )
+                        pointDistance = [...temp]; 
+                        console.log(pointDistance,'last')
+                        totalDistance = pointDistance.reduce((a,b) => a + b ,0);
+
+                        // totalDistance = optdData.route.distance;
                         var orderdList = [];
                         var loc = optdData.route.locationSequence;
                         var newFormat = JSON.parse(formattedObj)
@@ -738,16 +750,46 @@ $ed = $_REQUEST['ed'];
                                 }
 
 
-                                var checkedTime = h + ":" + m + ":" + s;
-                                for (var i = 0; i < checkedArr.length; i++) {
-                                    time.push(checkedTime);
-                                }
-                                optdData.route.legs.forEach((item) => {
-                                    distance = item.distance;
-                                    var calculatedTime = (distance / speed) * 60;
+                                // var checkedTime = h + ":" + m + ":" + s;
+                                // for (var i = 0; i < checkedArr.length; i++) {
+                                //     time.push(checkedTime);
+                                // }
+                                // optdData.route.legs.forEach((item) => {
+                                //     distance = item.distance;
+                                //     var calculatedTime = (distance / speed) * 60;
+                                //     calculatedTime += parseFloat(detTime);
+                                //     totalTime += calculatedTime
+
+                                    // var mins_num = calculatedTime;
+                                    // var hours = Math.floor(mins_num / 60);
+                                    // var minutes = Math.floor((mins_num - ((hours * 3600)) / 60));
+                                    // var seconds = Math.floor((mins_num * 60) - (hours * 3600) - (minutes * 60));
+
+                                    // // Appends 0 when unit is less than 10
+                                    // if (hours < 10) {
+                                    //     hours = "0" + hours;
+                                    // }
+                                    // if (minutes < 10) {
+                                    //     minutes = "0" + minutes;
+                                    // }
+                                    // if (seconds < 10) {
+                                    //     seconds = "0" + seconds;
+                                    // }
+                                //     var calculatedTimeHms = hours + ':' + minutes + ':' + seconds;
+
+                                //     var nowHms = addTimes(iniTime, calculatedTimeHms);
+                                //     time.push(nowHms)
+                                //     iniTime = nowHms
+
+                                // })
+                                // convert total time to HMS
+                                
+                                pointDistance.forEach(item => {
+                                    distance = item;
+                                    var calculatedTime = (distance / speed) * 60; 
                                     calculatedTime += parseFloat(detTime);
                                     totalTime += calculatedTime
-
+                                    pointTime.push(calculatedTime);
 
                                     var mins_num = calculatedTime;
                                     var hours = Math.floor(mins_num / 60);
@@ -764,15 +806,14 @@ $ed = $_REQUEST['ed'];
                                     if (seconds < 10) {
                                         seconds = "0" + seconds;
                                     }
+
                                     var calculatedTimeHms = hours + ':' + minutes + ':' + seconds;
 
                                     var nowHms = addTimes(iniTime, calculatedTimeHms);
                                     time.push(nowHms)
                                     iniTime = nowHms
-                                    eta = time
-
                                 })
-                                // convert total time to HMS
+                                
                                 var mins_num = totalTime;
                                 var hours = Math.floor(mins_num / 60);
                                 var minutes = Math.floor((mins_num - ((hours * 3600)) / 60));
@@ -790,6 +831,11 @@ $ed = $_REQUEST['ed'];
                                 }
                                 var totalTimeHms = hours + ':' + minutes + ':' + seconds;
                                 totalRouteTime = totalTimeHms;
+                                console.log(totalRouteTime,"totalRouteTime");
+
+                                let temp = parseFloat(totalDistance).toFixed(3);
+                                totalDistance = temp;
+
                                 $('#spinner').css('display','none')
                                 $('#left-events').html('');
                                 var c = 0
@@ -821,7 +867,8 @@ $ed = $_REQUEST['ed'];
                                 // $('#hide_total').css('display','none');
                                 $('.displayTotal').html('')
                                 $('.displayTotal').append(
-                                    `<h6 style="color:green">Total distance : ` + optdData.route.distance + ` km</h6>` +
+                                    // `<h6 style="color:green">Total distance : ` + optdData.route.distance + ` km</h6>` +
+                                    `<h6 style="color:green">Total distance : ` + totalDistance + ` km</h6>` +
                                     `<h6 style="color:green">Total time : ` + totalTimeHms + ` hrs</h6>`
                                 )
                                 // checkedArr = [];

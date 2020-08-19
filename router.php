@@ -216,10 +216,9 @@ if (isset($_REQUEST['fx'])) {
       $avgSpeed = $_REQUEST['avgSpeed'];
       $detTime = $_REQUEST['detTime'];
       $totalRouteTime = $_REQUEST['totalRouteTime'];
-      $eta = $_REQUEST['eta'];
       $pointDistance = $_REQUEST['pointDistance'];
       $pointTime = $_REQUEST['pointTime'];
-      $res = saveRoute($saveRouteId, $checkedArr, $tempLatlong, $whId, $wtId, $rtwh, $enTraffic, $totalDistance, $avgSpeed, $detTime, $totalRouteTime, $eta, $pointDistance, $pointTime);
+      $res = saveRoute($saveRouteId, $checkedArr, $tempLatlong, $whId, $wtId, $rtwh, $enTraffic, $totalDistance, $avgSpeed, $detTime, $totalRouteTime, $pointDistance, $pointTime);
       echo $res;
       break;
     case 33:
