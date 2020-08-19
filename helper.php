@@ -606,7 +606,7 @@ function getWaytripItems($wid) {
   return json_encode($res);
 }
 
-function delWaytripItems($wtid,$wid) {
+function delWaytripItems($wtid,$wid) {  
   $con = con();
   $wtid = mysqli_real_escape_string($con,$wtid);
 
@@ -618,8 +618,6 @@ function delWaytripItems($wtid,$wid) {
   $distance = [];
   $first_distance  = [];
   $ini_ll = '';
-
-
 
   $desp_id = mysqli_query($con,"SELECT `despatch_id` FROM `waytrip_items` WHERE `id`= '$wtid' ");
   $fetch_desp_id = mysqli_fetch_array($desp_id);
@@ -636,7 +634,6 @@ function delWaytripItems($wtid,$wid) {
     $waytrip_items = mysqli_query($con,"SELECT * FROM `waytrip_items` WHERE `waytrip_id`= '$wid' ");
     $num_wt_items = mysqli_num_rows($waytrip_items);
     $update_waytrip = mysqli_query($con,"UPDATE `waytrip` SET `total_orders`= '$num_wt_items' WHERE `waytrip_id` = '$wid'");
-
 
     // Check whether the customer has another order //// 
 
@@ -688,6 +685,14 @@ function delWaytripItems($wtid,$wid) {
         if($fetch_route['return_to_warehouse'] == 1) {
           $unchecked_ll[] = $w_ll;
         }
+        // echo $w_ll;
+        // echo count($unchecked_ll) ;
+        // print_r($unchecked_ll);
+
+        if((count($unchecked_ll) == 1 && $unchecked_ll[0] == $w_ll) || (count($unchecked_ll) == 0) ) {
+          
+          $delete_route_items = mysqli_query($con,"DELETE FROM `route_items` WHERE `route_id`='$rid' ");
+        } else {
 
         $array_to_opt = $unchecked_ll;
         array_unshift($array_to_opt,$ini_ll);
@@ -777,7 +782,8 @@ function delWaytripItems($wtid,$wid) {
                             VALUES('$rid','$id','$is_fixed','$item_order','$lat','$long','$delay','$dis_from_prev') ");
 
           }
-          
+
+        }
 
     }
 
@@ -1063,15 +1069,14 @@ function addItemsToDriver($wtid,$desp_id) {
       $fetch_cust = mysqli_fetch_array($customer);
       $cust_id =  $fetch_cust['customer_id'];
       
-      if(in_array($cust_id,$all_route_items)) {
-        // echo '';
-      } else {
+      if(!in_array($cust_id,$all_route_items) && !in_array($cust_id,$id_not_in_route)) {
         $id_not_in_route[] = $cust_id;
-      }
+      } 
       
     }
     
-    $id_not_in_route = array_unique($id_not_in_route);
+    // $id_not_in_route = array_unique($id_not_in_route);
+    
 
     if(!empty($id_not_in_route)) {
       
