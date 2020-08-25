@@ -80,176 +80,189 @@ $ed = $_REQUEST['ed'];
                     <div class="statbox widget box box-shadow">
                         <div class="widget-content widget-content-area">
                             <?php
-                            if($ed==1){
+                            if ($ed == 1) {
                                 $route_details = mysqli_query($con, "SELECT * FROM `route`WHERE `waytrip_id`='$wid' AND `created_by`='$uid' ");
                                 $route = mysqli_fetch_assoc($route_details);
                                 $warehouse_id = $route['warehouse_id'];
                                 $sql = mysqli_query($con, "SELECT * FROM `route` INNER JOIN `route_items` ON route_items.route_id=route.route_id WHERE `waytrip_id`='$wid' ");
-                                
+
                                 $cutomers = mysqli_num_rows($sql);
                                 // if ($cutomers > 0) {
 
 
-                            }else{
+                            } else {
                                 $sql = mysqli_query($con, "SELECT DISTINCT(customer_id) FROM `despatch` INNER JOIN `waytrip_items` ON waytrip_items.despatch_id=despatch.despatch_id WHERE `waytrip_id`='$wid' ");
                                 $cutomers = mysqli_num_rows($sql);
                                 // if ($cutomers > 0) {
                             }
-                            
+
                             ?>
-                                <div class="row ml-2">
-                                    <div class="form-group col-6">
-                                        <label for="warehouse">Select warehouse
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down">
-                                                <polyline points="6 9 12 15 18 9"></polyline>
-                                            </svg>
-                                        </label>
-                                        <select class="form-control basic" id="warehouse">
-                                            <?php
-                                            $wh_data = mysqli_query($con, "SELECT `warehouse_id`,`warehouse_name` FROM `warehouse` WHERE `created_by` = '$uid' AND `org_id` = '$oid' ");
-                                            while ($wh = mysqli_fetch_array($wh_data)) {
-                                            ?>
-                                                <option value="<?php echo $wh['warehouse_id'] ?>" <?php if(isset($warehouse_id) && $warehouse_id == $wh['warehouse_id']) {echo 'selected';} ?>><?php echo $wh['warehouse_name'] ?></option>
-                                            <?php }  ?>
-                                        </select>
-                                    </div>
-                                    <!-- <div class="col-3"></div> -->
-                                    <?php 
-                                    if($ed == 1) {
-                                        echo '<div class="col-5 displayTotal align-right" id="hide_total" style="margin-top: 1.8rem;margin-left: 3.5rem">
-                                        <h6 style="color:green">Total distance : '. $route['total_distance'].' km</h6>
-                                        <h6 style="color:green">Total time : '. $route['total_time'] .' hrs</h6>
+                            <div class="row ml-2">
+                                <div class="form-group col-6">
+                                    <label for="warehouse">Select warehouse
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </label>
+                                    <select class="form-control basic" id="warehouse">
+                                        <?php
+                                        $wh_data = mysqli_query($con, "SELECT `warehouse_id`,`warehouse_name` FROM `warehouse` WHERE `created_by` = '$uid' AND `org_id` = '$oid' ");
+                                        while ($wh = mysqli_fetch_array($wh_data)) {
+                                        ?>
+                                            <option value="<?php echo $wh['warehouse_id'] ?>" <?php if (isset($warehouse_id) && $warehouse_id == $wh['warehouse_id']) {
+                                                                                                    echo 'selected';
+                                                                                                } ?>><?php echo $wh['warehouse_name'] ?></option>
+                                        <?php }  ?>
+                                    </select>
+                                </div>
+                                <!-- <div class="col-3"></div> -->
+                                <?php
+                                if ($ed == 1) {
+                                    echo '<div class="col-5 displayTotal align-right" id="hide_total" style="margin-top: 1.8rem;margin-left: 3.5rem">
+                                        <h6 style="color:green">Total distance : ' . $route['total_distance'] . ' km</h6>
+                                        <h6 style="color:green">Total time : ' . $route['total_time'] . ' hrs</h6>
                                         </div>';
-                                    } else {
-                                        echo '<div class="col-5 displayTotal align-right" style="margin-top: 1.8rem;margin-left: 3.5rem"> </div>';
-                                    }
-                                    ?>
-                                    <!-- <div class="col-5 displayTotal align-right" style="margin-top: 1.8rem;margin-left: 3.5rem"> </div> -->
+                                } else {
+                                    echo '<div class="col-5 displayTotal align-right" style="margin-top: 1.8rem;margin-left: 3.5rem"> </div>';
+                                }
+                                ?>
+                                <!-- <div class="col-5 displayTotal align-right" style="margin-top: 1.8rem;margin-left: 3.5rem"> </div> -->
+                            </div>
+                            <div class="row ml-2 mt-2 controls">
+                                <div class="form-group col-3">
+                                    <div>
+                                        <input type="checkbox" id="rtwh" value="1" <?php if (isset($route['return_to_warehouse']) && $route['return_to_warehouse'] == 0) {
+                                                                                        echo '';
+                                                                                    } else {
+                                                                                        echo 'checked';
+                                                                                    } ?>></input>
+                                        <label> Return to warehouse</label>
+                                    </div>
+                                    <div>
+                                        <input type="checkbox" id="enable_traffic" value="1" disabled <?php if (isset($route['enable_traffic']) && $route['enable_traffic'] == 1) {
+                                                                                                            echo 'checked';
+                                                                                                        } ?>></input>
+                                        <label for="enable_traffic"> Enable traffic</label>
+                                    </div>
                                 </div>
-                                <div class="row ml-2 mt-2 controls">
-                                    <div class="form-group col-3">
-                                        <div>
-                                            <input type="checkbox" id="rtwh" value="1" <?php if(isset($route['return_to_warehouse']) && $route['return_to_warehouse']==0) { echo ''; } else { echo 'checked';} ?> ></input>
-                                            <label> Return to warehouse</label>
-                                        </div>
-                                        <div>
-                                            <input type="checkbox" id="enable_traffic" value="1" disabled <?php if(isset($route['enable_traffic']) && $route['enable_traffic']==1) { echo 'checked'; } ?>></input>
-                                            <label for="enable_traffic"> Enable traffic</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-3">
-                                        <label for="speed">Average speed (km/hr)</label>
-                                        <input type="text" class="form-control" id="speed" placeholder="Average speed (km/hr)" value="<?php if(isset($route['enable_traffic'])){ echo $route['avg_speed']; } else echo '40'  ?> ">
-                                    </div>
-                                    <div class="col-3">
-                                        <label for="detention_time">Detention time (m)</label>
-                                        <input type="text" class="form-control" id="detention_time" placeholder="Detention time (m)" value="<?php if(isset($route['enable_traffic'])){ echo $route['detention_time']; } else echo '5'  ?>">
-                                    </div>
-                                    
-                                    <div class="col-3">
-                                        <button type="button" class="btn btn-primary " id="optimize-route" style="margin-top: 30px; height: 45px;width: 12rem;">Optimize Route</button>
-                                    </div>
+                                <div class="col-3">
+                                    <label for="speed">Average speed (km/hr)</label>
+                                    <input type="text" class="form-control" id="speed" placeholder="Average speed (km/hr)" value="<?php if (isset($route['enable_traffic'])) {
+                                                                                                                                        echo $route['avg_speed'];
+                                                                                                                                    } else echo '40'  ?> ">
+                                </div>
+                                <div class="col-3">
+                                    <label for="detention_time">Detention time (m)</label>
+                                    <input type="text" class="form-control" id="detention_time" placeholder="Detention time (m)" value="<?php if (isset($route['enable_traffic'])) {
+                                                                                                                                            echo $route['detention_time'];
+                                                                                                                                        } else echo '5'  ?>">
                                 </div>
 
-                                <!-- <div class="loader"></div> -->
-                                <div class="align-center display-none" id="spinner">
-                                    <div class="spinner-border position-absolute" role="status">
+                                <div class="col-3">
+                                    <button type="button" class="btn btn-primary " id="optimize-route" style="margin-top: 30px; height: 45px;width: 12rem;">Optimize Route</button>
+                                </div>
+                            </div>
+
+                            <!-- <div class="loader"></div> -->
+                            <div class="align-center display-none" id="spinner">
+                                <div class="spinner-border position-absolute" role="status">
                                     <!-- <span class="sr-only">Loading...</span> -->
-                                    </div>
                                 </div>
-                                
+                            </div>
 
-                                <div class='parent ex-2'>
-                                    <div class='row'>
-                                        <div class="col-md-12">
-                                            <div id='left-events' class='dragula'>
-                                                <?php
-                                                $c = 0;
-                                                while ($row = mysqli_fetch_assoc($sql)) {
-                                                    $c++;
-                                                    // $idToOptimize[] = $row['customer_id'];
-                                                    //  if(isset($row['is_fixed'])) {
-                                                    //     $is_fixed =$row['is_fixed'];
-                                                    //  } else {
-                                                         
-                                                    //  }
-                                                    if($ed == 1) {
-                                                        if($row['is_fixed']==1){
-                                                            $checkedArr[] = $row['customer_id'];
-                                                        } 
-                                                        else {
-                                                            $idToOptimize[] = $row['customer_id'];
-                                                        }
-                                                        $customer = mysqli_query($con, "SELECT `cust_id`,`cust_name` FROM `customer` WHERE `cust_id` =" . $row['customer_id']);
-                                                        $customer_data = mysqli_fetch_array($customer);
-                                                        $lat = $row['latitude'];
-                                                        $long = $row['longitude'];
-                                                        $cust_id = $customer_data['cust_id'];
-                                                        $latLong = $row['latitude'] && $row['latitude'] ? $row['latitude'] . ',' . $row['longitude'] : '';
-                                                        $latLongArray[$cust_id] = $latLong;
+
+                            <div class='parent ex-2'>
+                                <div class='row'>
+                                    <div class="col-md-12">
+                                        <div id='left-events' class='dragula'>
+                                            <?php
+                                            $c = 0;
+                                            while ($row = mysqli_fetch_assoc($sql)) {
+                                                $c++;
+                                                // $idToOptimize[] = $row['customer_id'];
+                                                //  if(isset($row['is_fixed'])) {
+                                                //     $is_fixed =$row['is_fixed'];
+                                                //  } else {
+
+                                                //  }
+                                                if ($ed == 1) {
+                                                    if ($row['is_fixed'] == 1) {
+                                                        $checkedArr[] = $row['customer_id'];
                                                     } else {
                                                         $idToOptimize[] = $row['customer_id'];
-                                                        $customer = mysqli_query($con, "SELECT `cust_id`,`cust_name`,`latitude`,`longitude` FROM `customer` WHERE `cust_id` =" . $row['customer_id']);
-                                                        $customer_data = mysqli_fetch_array($customer);
-                                                        $lat = $customer_data['latitude'];
-                                                        $long = $customer_data['longitude'];
-                                                        $cust_id = $customer_data['cust_id'];
-                                                        $latLong = $customer_data['latitude'] && $customer_data['latitude'] ? $customer_data['latitude'] . ',' . $customer_data['longitude'] : '';
-                                                        $latLongArray[$cust_id] = $latLong;
                                                     }
-                                                    
+                                                    $customer = mysqli_query($con, "SELECT `cust_id`,`cust_name` FROM `customer` WHERE `cust_id` =" . $row['customer_id']);
+                                                    $customer_data = mysqli_fetch_array($customer);
+                                                    $lat = $row['latitude'];
+                                                    $long = $row['longitude'];
+                                                    $cust_id = $customer_data['cust_id'];
+                                                    $latLong = $row['latitude'] && $row['latitude'] ? $row['latitude'] . ',' . $row['longitude'] : '';
+                                                    $latLongArray[$cust_id] = $latLong;
+                                                } else {
+                                                    $idToOptimize[] = $row['customer_id'];
+                                                    $customer = mysqli_query($con, "SELECT `cust_id`,`cust_name`,`latitude`,`longitude` FROM `customer` WHERE `cust_id` =" . $row['customer_id']);
+                                                    $customer_data = mysqli_fetch_array($customer);
+                                                    $lat = $customer_data['latitude'];
+                                                    $long = $customer_data['longitude'];
+                                                    $cust_id = $customer_data['cust_id'];
+                                                    $latLong = $customer_data['latitude'] && $customer_data['latitude'] ? $customer_data['latitude'] . ',' . $customer_data['longitude'] : '';
+                                                    $latLongArray[$cust_id] = $latLong;
+                                                }
 
-                                                ?>
-                                                    <div class="media d-block d-sm-flex">
-                                                        <div class="media-body">
-                                                            <div class="d-flex justify-content-between">
-                                                                <div class="cutomer">
-                                                                    <h6 class=""><?php echo $c . ". " ?><?php echo $customer_data['cust_name'] ?></h6>
-                                                                </div>
 
-                                                                <div class="customers">
-                                                                    <?php if (($lat) and ($long)) { ?>
-                                                                        <a href="" data-toggle="modal" data-target="#exampleModal" title="Change latitude and longitude">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-map-pin chngIcon changeLl custId" cid="<?php echo $customer_data['cust_id'] ?>" style="margin-bottom:4px">
-                                                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                                                                <circle cx="12" cy="10" r="3"></circle>
-                                                                            </svg>
-                                                                        </a>
-                                                                        <input type="hidden" id="changeIcon" value="">
-                                                                    <?php } else { ?>
-                                                                        <a href="" data-toggle="modal" data-target="#exampleModal" title="Add latitude and longitude">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-map-pin addIcon addLl custId" cid="<?php echo $customer_data['cust_id'] ?>" style="margin-bottom:4px">
-                                                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                                                                <circle cx="12" cy="10" r="3"></circle>
-                                                                            </svg>
-                                                                        </a>
-                                                                    <?php } ?>
+                                            ?>
+                                                <div class="media d-block d-sm-flex">
+                                                    <div class="media-body">
+                                                        <div class="d-flex justify-content-between">
+                                                            <div class="cutomer">
+                                                                <h6 class=""><?php echo $c . ". " ?><?php echo $customer_data['cust_name'] ?></h6>
+                                                            </div>
 
-                                                                    <input type='checkbox' class="dragBlocker ml-1" value="<?php echo $row['customer_id'] ?>" <?php if(isset($row['is_fixed']) && $row['is_fixed']==1) { echo 'checked'; } ?>>
-                                                                </div>
+                                                            <div class="customers">
+                                                                <?php if (($lat) and ($long)) { ?>
+                                                                    <a href="" data-toggle="modal" data-target="#exampleModal" title="Change latitude and longitude">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-map-pin chngIcon changeLl custId" cid="<?php echo $customer_data['cust_id'] ?>" style="margin-bottom:4px">
+                                                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                                                            <circle cx="12" cy="10" r="3"></circle>
+                                                                        </svg>
+                                                                    </a>
+                                                                    <input type="hidden" id="changeIcon" value="">
+                                                                <?php } else { ?>
+                                                                    <a href="" data-toggle="modal" data-target="#exampleModal" title="Add latitude and longitude">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-map-pin addIcon addLl custId" cid="<?php echo $customer_data['cust_id'] ?>" style="margin-bottom:4px">
+                                                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                                                            <circle cx="12" cy="10" r="3"></circle>
+                                                                        </svg>
+                                                                    </a>
+                                                                <?php } ?>
+
+                                                                <input type='checkbox' class="dragBlocker ml-1" value="<?php echo $row['customer_id'] ?>" <?php if (isset($row['is_fixed']) && $row['is_fixed'] == 1) {
+                                                                                                                                                                echo 'checked';
+                                                                                                                                                            } ?>>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                <?php
-                                                }
-                                                ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <div class="save-route align-right">
-                                                <a href="view_route.php?wid=<?php echo $wid?>"><button type="button" class="btn btn-primary" style="margin-top: 30px; height: 45px;width: 12rem;">Close</button></a>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="save-route">
-                                                <button type="button" class="btn btn-dark" id="save_route" style="margin-top: 30px; height: 45px;width: 12rem;" disabled>Save Route</button>
-                                            </div>
+                                                </div>
+                                            <?php
+                                            }
+                                            ?>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- <div class="row">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="save-route align-right">
+                                            <a href="view_route.php?wid=<?php echo $wid ?>"><button type="button" class="btn btn-primary" style="margin-top: 30px; height: 45px;width: 12rem;">Close</button></a>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="save-route">
+                                            <button type="button" class="btn btn-dark" id="save_route" style="margin-top: 30px; height: 45px;width: 12rem;" disabled>Save Route</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- <div class="row">
                                     <div class="col-3 ml-4">
                                         <label for="speed">Average speed (km/hr)</label>
                                         <input type="text" class="form-control" id="speed" placeholder="Average speed (km/hr)" value="40">
@@ -258,16 +271,18 @@ $ed = $_REQUEST['ed'];
                                         <button type="button" class="btn btn-primary " id="optimize-route">Optimize Route</button>
                                     </div>
                                 </div> -->
-                                <!-- <div class="form-group  col-6">
+                            <!-- <div class="form-group  col-6">
                                         <input type="text" class="form-control" id="speed" placeholder="Average speed (km/hr)">
                                     </div>
                                     <div class="align-right mr-4 col-6">
                                         <button type="button" class="btn btn-primary" id="optimize-route">Optimize Route</button>
                                     </div> -->
 
-                            <?php // } else { ?>
-                                <!-- <p class="align-center vert-center">No data available</p> -->
-                            <?php // } ?>
+                            <?php // } else { 
+                            ?>
+                            <!-- <p class="align-center vert-center">No data available</p> -->
+                            <?php // } 
+                            ?>
                         </div>
                     </div>
                 </div>
@@ -289,7 +304,7 @@ $ed = $_REQUEST['ed'];
                     </div>
                     <div class="modal-body">
                         <form onsubmit="event.preventDefault();">
-                            <input type="hidden" class="cid" value="">
+                                <input type="hidden" class="cid" value="">
                             <!-- <input type="hidden" class="isedit" value="<?php //echo $isedit; 
                                                                             ?>" />
                                                                         <input type="hidden" id="whid" value="<?php //echo $whid; 
@@ -366,7 +381,7 @@ $ed = $_REQUEST['ed'];
         var wid = <?php echo json_encode($wid); ?>;
         var warehouseId = '';
         var tempLatlong = latLongArr;
-        var checkedArr = <?php echo json_encode($checkedArr) ; ?>;
+        var checkedArr = <?php echo json_encode($checkedArr); ?>;
         var uncheckedArr = idToOptimize;
         var checkedLatlong = [];
         var uncheckedLatlong = [];
@@ -374,7 +389,6 @@ $ed = $_REQUEST['ed'];
         var saveRouteId = [];
         var totalDistance = '';
         var totalRouteTime = '';
-        var eta = [];
         var pointDistance = [];
         var ifFixed = [];
         var pointTime = [];
@@ -388,41 +402,54 @@ $ed = $_REQUEST['ed'];
             let detTime = $('#detention_time').val();
             let tempArr = pointDistance.filter(val => val !== 0)
             pointDistance = tempArr;
-            pointTime = [];
-            pointDistance.forEach(item => {
-                // time to minutes
-                let tempTime = (item/avgSpeed)*60;
-                tempTime += parseFloat(detTime);
-                // time to seconds
-                tempTime = tempTime*60;
+            // pointTime = [];
+            // pointDistance.forEach(item => {
+            //     // time to minutes
+            //     let tempTime = (item/avgSpeed)*60;
+            //     tempTime += parseFloat(detTime);
+            //     // time to seconds
+            //     tempTime = tempTime*60;
 
-                pointTime.push(tempTime)
-                
-            })
-            
-            
+            //     pointTime.push(tempTime)
+
+            // })
+
+
             $.ajax({
-                url:'router.php',
-                method:'post',
-                dataType:'json',
-                data:{ fx:32,saveRouteId:saveRouteId,checkedArr:checkedArr,tempLatlong:tempLatlong,whId:warehouseId,wtId:wid,
-                       rtwh:rtwh, enTraffic:enTraffic, totalDistance:totalDistance, avgSpeed:avgSpeed, detTime:detTime,totalRouteTime:totalRouteTime,
-                       eta:eta,pointDistance:pointDistance,pointTime:pointTime },
-                success:function(data) {
-                    if(data==1)
-                    swal({
-                                title: 'Yaay!',
-                                text: "Route has been saved successfully!",
-                                type: 'success',
-                                padding: '2em'
-                            });
-                    $('#save_route').attr('disabled',true)
+                url: 'router.php',
+                method: 'post',
+                dataType: 'json',
+                data: {
+                    fx: 32,
+                    saveRouteId: saveRouteId,
+                    checkedArr: checkedArr,
+                    tempLatlong: tempLatlong,
+                    whId: warehouseId,
+                    wtId: wid,
+                    rtwh: rtwh,
+                    enTraffic: enTraffic,
+                    totalDistance: totalDistance,
+                    avgSpeed: avgSpeed,
+                    detTime: detTime,
+                    totalRouteTime: totalRouteTime,
+                    pointDistance: pointDistance,
+                    pointTime: pointTime
+                },
+                success: function(data) {
+                    if (data == 1)
+                        swal({
+                            title: 'Yaay!',
+                            text: "Route has been saved successfully!",
+                            type: 'success',
+                            padding: '2em'
+                        });
+                    $('#save_route').attr('disabled', true)
                 }
             })
         })
 
-        $('#warehouse,#rtwh').on('change',function(){
-            $('#save_route').attr('disabled',true)
+        $('#warehouse,#rtwh').on('change', function() {
+            $('#save_route').attr('disabled', true)
         })
 
         // Get customer id to moadal
@@ -442,7 +469,7 @@ $ed = $_REQUEST['ed'];
             var cid = $('.cid').val();
             var lat = $('#ltd').val();
             var lng = $('#lng').val();
-            $('#save_route').attr('disabled',true)
+            $('#save_route').attr('disabled', true)
 
             var saveLatlong = $('#saveLatlong:checked').val();
 
@@ -483,13 +510,13 @@ $ed = $_REQUEST['ed'];
 
         // $(".dragBlocker").on('click',function(event) {
         //     // $(this).prev().attr('checked',true);
-            
+
         //     if($(this).prev().attr('checked')==false) {
         //         console.log('checked');
         //     } else {
         //         console.log('not chkd')
         //     }
-                
+
         //     var cid = event.target.value
         //     $('#save_route').attr('disabled',true)
         //     if (event.target.checked) {
@@ -507,7 +534,7 @@ $ed = $_REQUEST['ed'];
 
         $("#left-events").on('click', '.dragBlocker', function(event) {
             var cid = event.target.value
-            $('#save_route').attr('disabled',true)
+            $('#save_route').attr('disabled', true)
             if (event.target.checked) {
                 if (!checkedArr.includes(event.target.value)) {
                     checkedArr.push(cid);
@@ -578,8 +605,11 @@ $ed = $_REQUEST['ed'];
             // console.log(checkedArr, "ckd")
             // console.log(uncheckedArr,"uckd")
             // console.log(whLatlong,"wh");
-            $('#spinner').css('display','block')
+            $('#spinner').css('display', 'block')
             pointDistance = [];
+            pointTime = [];
+            checkedLatlong = [];
+            uncheckedLatlong = [];
 
             var warehouseId = $('#warehouse option:selected').val();
             var whLatlong = '';
@@ -625,34 +655,53 @@ $ed = $_REQUEST['ed'];
                 }
                 if (checkedLatlong.length > 0) {
                     var lastChecked = checkedLatlong[checkedLatlong.length - 1]
-                    // console.log(lastChecked,"last")
                     tempArr.unshift(lastChecked)
 
                     // Get distance between fixed points
                     ifFixed = checkedLatlong;
                     ifFixed.unshift(whLatlong);
-                    var fixedLocations= {};
-                    fixedLocations.locations = ifFixed;
-                    fixedLocations = JSON.stringify(fixedLocations);
-                    $.ajax({
-                    url: 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk',
-                    method: 'post',
-                    contentType: 'application/json',
-                    dataType: 'json',
-                    data: fixedLocations,
-                    success: function(fixed) {
-                        let distance = fixed.route.legs
-                        distance = distance.reverse();
-                        for(let i=0;i<distance.length;i++) {
-                            pointDistance.unshift(distance[i]['distance'])
+                    for (var i = 0; i < ifFixed.length; i++) {
+                        // console.log(ifFixed);
+                        var adj_points = [];
+                        var first = ifFixed[i];
+                        if (ifFixed[i + 1]) {
+                            adj_points.push(first);
+                            var sec = ifFixed[i + 1];
+                            adj_points.push(sec);
                         }
+                        // console.log(adj_points,'adj_points');
+                        var fixedLocations = {};
+
+                        fixedLocations.locations = adj_points;
+                        fixedLocations = JSON.stringify(fixedLocations);
+                        $.ajax({
+                            url: 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk',
+                            method: 'post',
+                            contentType: 'application/json',
+                            dataType: 'json',
+                            async: false,
+                            data: fixedLocations,
+                            success: function(fixed) {
+                                // console.log(fixed);
+                                if (ifFixed[i + 1]) {
+                                    let dis = fixed.route.distance;
+                                    pointDistance.push(dis)
+
+                                }
+                            }
+                        })
+                        let temp = pointDistance.filter(val => val !== 0)
+                        pointDistance = [...temp];
+                        // console.log(pointDistance,"mid");
+                        // Get distance between fixed points
+
                     }
-                    })
-                    // Get distance between fixed points
+
 
                 } else {
                     tempArr.unshift(whLatlong)
                 }
+
                 if ($('#rtwh:checked').val() == 1) {
                     tempArr.push(whLatlong);
                 } else {
@@ -667,7 +716,7 @@ $ed = $_REQUEST['ed'];
                 formattedObj.locations = tempArr;
 
                 formattedObj = JSON.stringify(formattedObj);
-                
+
                 // console.log(formattedObj,'formattedObj')
                 $.ajax({
                     url: 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk',
@@ -676,12 +725,20 @@ $ed = $_REQUEST['ed'];
                     dataType: 'json',
                     data: formattedObj,
                     success: function(optdData) {
-                        $('#save_route').attr('disabled',false)
+                        $('#save_route').attr('disabled', false)
                         let distance = optdData.route.legs
-                        for(let i=0;i<distance.length;i++) {
+                        for (let i = 0; i < distance.length; i++) {
                             pointDistance.push(distance[i]['distance'])
                         }
-                            totalDistance = optdData.route.distance;
+                        // console.log(pointDistance,'unchecked dis');
+
+                        let temp = pointDistance.filter(val => val !== 0)
+                        pointDistance = [...temp];
+                        // console.log(pointDistance,'last')
+                        totalDistance = pointDistance.reduce((a, b) => a + b, 0);
+                        // console.log(totalDistance,"totalDistance");
+
+                        // totalDistance = optdData.route.distance;
                         var orderdList = [];
                         var loc = optdData.route.locationSequence;
                         var newFormat = JSON.parse(formattedObj)
@@ -738,16 +795,51 @@ $ed = $_REQUEST['ed'];
                                 }
 
 
-                                var checkedTime = h + ":" + m + ":" + s;
-                                for (var i = 0; i < checkedArr.length; i++) {
-                                    time.push(checkedTime);
-                                }
-                                optdData.route.legs.forEach((item) => {
-                                    distance = item.distance;
+                                // var checkedTime = h + ":" + m + ":" + s;
+                                // for (var i = 0; i < checkedArr.length; i++) {
+                                //     time.push(checkedTime);
+                                // }
+                                // optdData.route.legs.forEach((item) => {
+                                //     distance = item.distance;
+                                //     var calculatedTime = (distance / speed) * 60;
+                                //     calculatedTime += parseFloat(detTime);
+                                //     totalTime += calculatedTime
+
+                                // var mins_num = calculatedTime;
+                                // var hours = Math.floor(mins_num / 60);
+                                // var minutes = Math.floor((mins_num - ((hours * 3600)) / 60));
+                                // var seconds = Math.floor((mins_num * 60) - (hours * 3600) - (minutes * 60));
+
+                                // // Appends 0 when unit is less than 10
+                                // if (hours < 10) {
+                                //     hours = "0" + hours;
+                                // }
+                                // if (minutes < 10) {
+                                //     minutes = "0" + minutes;
+                                // }
+                                // if (seconds < 10) {
+                                //     seconds = "0" + seconds;
+                                // }
+                                //     var calculatedTimeHms = hours + ':' + minutes + ':' + seconds;
+
+                                //     var nowHms = addTimes(iniTime, calculatedTimeHms);
+                                //     time.push(nowHms)
+                                //     iniTime = nowHms
+
+                                // })
+                                // convert total time to HMS
+
+                                console.log(pointDistance);
+
+                                pointDistance.forEach(item => {
+                                    distance = item;
                                     var calculatedTime = (distance / speed) * 60;
                                     calculatedTime += parseFloat(detTime);
+                                    calculatedTime = calculatedTime * 60;
+                                    console.log(calculatedTime, "ptime");
                                     totalTime += calculatedTime
-
+                                    console.log(totalTime, 'totalTime')
+                                    pointTime.push(calculatedTime);
 
                                     var mins_num = calculatedTime;
                                     var hours = Math.floor(mins_num / 60);
@@ -764,16 +856,17 @@ $ed = $_REQUEST['ed'];
                                     if (seconds < 10) {
                                         seconds = "0" + seconds;
                                     }
+
                                     var calculatedTimeHms = hours + ':' + minutes + ':' + seconds;
 
                                     var nowHms = addTimes(iniTime, calculatedTimeHms);
                                     time.push(nowHms)
                                     iniTime = nowHms
-                                    eta = time
-
                                 })
-                                // convert total time to HMS
-                                var mins_num = totalTime;
+
+                                console.log(pointTime, 'pttime')
+
+                                var mins_num = totalTime / 60;
                                 var hours = Math.floor(mins_num / 60);
                                 var minutes = Math.floor((mins_num - ((hours * 3600)) / 60));
                                 var seconds = Math.floor((mins_num * 60) - (hours * 3600) - (minutes * 60));
@@ -790,7 +883,12 @@ $ed = $_REQUEST['ed'];
                                 }
                                 var totalTimeHms = hours + ':' + minutes + ':' + seconds;
                                 totalRouteTime = totalTimeHms;
-                                $('#spinner').css('display','none')
+                                // console.log(totalRouteTime,"totalRouteTime");
+
+                                let temp = parseFloat(totalDistance).toFixed(3);
+                                totalDistance = temp;
+
+                                $('#spinner').css('display', 'none')
                                 $('#left-events').html('');
                                 var c = 0
                                 for (var i = 0; i < newRenderList.length; i++) {
@@ -821,7 +919,8 @@ $ed = $_REQUEST['ed'];
                                 // $('#hide_total').css('display','none');
                                 $('.displayTotal').html('')
                                 $('.displayTotal').append(
-                                    `<h6 style="color:green">Total distance : ` + optdData.route.distance + ` km</h6>` +
+                                    // `<h6 style="color:green">Total distance : ` + optdData.route.distance + ` km</h6>` +
+                                    `<h6 style="color:green">Total distance : ` + totalDistance + ` km</h6>` +
                                     `<h6 style="color:green">Total time : ` + totalTimeHms + ` hrs</h6>`
                                 )
                                 // checkedArr = [];

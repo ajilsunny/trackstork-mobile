@@ -73,7 +73,7 @@
                         </div>
                     </div>
 
-                    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
+                    <!-- <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
                         <div class="widget widget-account-invoice-two">
                             <div class="widget-content">
                                 <div class="account-box">
@@ -91,9 +91,9 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
+                    <!-- <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
                         <div class="widget widget-card-four">
                             <div class="widget-content">
                                 <div class="w-content">
@@ -112,7 +112,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="col-xl-9 col-lg-12 col-md-12 col-sm-12 col-12 layout-spacing">
                         <div class="widget widget-chart-three">
@@ -258,7 +258,7 @@
                                         <div class="w-browser-details">
                                             <div class="w-browser-info">
                                                 <h6>Chrome</h6>
-                                                <p class="browser-count">65%</p>
+                                                <p class="browser-count">66%</p>
                                             </div>
                                             <div class="w-browser-stats">
                                                 <div class="progress">
@@ -316,7 +316,7 @@
                         </div>
                     </div>
 
-                    <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12 col-12 layout-spacing">
+                    <!-- <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12 col-12 layout-spacing">
                         <div class="row widget-statistic">
                             <div class="col-xl-4 col-lg-4 col-md-4 col-sm-4 col-12">
                                 <div class="widget widget-one_hybrid widget-followers">
@@ -367,9 +367,9 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
+                    <!-- <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
                         <div class="widget widget-card-one">
                             <div class="widget-content">
 
@@ -394,9 +394,9 @@
                             </div>
                         </div>
 
-                    </div>
+                    </div> -->
 
-                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
+                    <!-- <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
                         <div class="widget widget-five">
                             <div class="widget-content">
 
@@ -431,9 +431,9 @@
                             </div>
                         </div>
 
-                    </div>
+                    </div> -->
 
-                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 col-12 layout-spacing">
+                    <!-- <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 col-12 layout-spacing">
                         <div class="widget widget-card-two">
                             <div class="widget-content">
 
@@ -459,7 +459,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                 </div>
 

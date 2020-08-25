@@ -581,7 +581,14 @@ function deleteWaytrip($wid){
   
   if($sql){
     $wtItems = mysqli_query($con,"DELETE FROM `waytrip_items` WHERE `waytrip_id` =  '$wid' ");
-    if($wtItems){
+    $route = mysqli_query($con,"SELECT `route_id` FROM `route` WHERE `waytrip_id`='$wid' ");
+    $fetch_route = mysqli_fetch_array($route);
+    $rid= $fetch_route['route_id'];
+    $delete_route = mysqli_query($con,"DELETE FROM `route` WHERE `waytrip_id` = '$wid' ");
+    if($delete_route) {
+      $delete_route_items = mysqli_query($con,"DELETE FROM `route_items` WHERE `route_id` = '$rid' ");
+    }
+    if($delete_route_items){
       return 1;
     }
   }
@@ -606,7 +613,7 @@ function getWaytripItems($wid) {
   return json_encode($res);
 }
 
-function delWaytripItems($wtid,$wid) {
+function delWaytripItems($wtid,$wid) {  
   $con = con();
   $wtid = mysqli_real_escape_string($con,$wtid);
 
@@ -615,172 +622,283 @@ function delWaytripItems($wtid,$wid) {
   $unchecked_id = [];
   $checked_ll = [];
   $unchecked_ll = [];
-  $distance = [];
-  $first_distance  = [];
+  $distance_checked = [];
+  $distance_unchecked = [];
+  $pointDistance  = [];
   $ini_ll = '';
-  
 
+  $desp_id = mysqli_query($con,"SELECT `despatch_id` FROM `waytrip_items` WHERE `id`= '$wtid' ");
+  $fetch_desp_id = mysqli_fetch_array($desp_id);
+
+  $cust_id = mysqli_query($con,"SELECT `customer_id` FROM `despatch` WHERE `despatch_id` =".$fetch_desp_id['despatch_id']) ;
+  $fetch_cust_id = mysqli_fetch_array($cust_id);
+  $desp_cust_id = $fetch_cust_id['customer_id'];
+
+  $cust_existing = mysqli_query($con,"SELECT * FROM waytrip_items w, despatch d WHERE d.despatch_id = w.despatch_id AND w.`waytrip_id`='$wid' AND d.`customer_id`='$desp_cust_id' ");
+  $fetch_cust_existing = mysqli_num_rows($cust_existing);
     
-    $desp_id = mysqli_query($con,"SELECT `despatch_id` FROM `waytrip_items` WHERE `id`= '$wtid' ");
-    $fetch_desp_id = mysqli_fetch_array($desp_id);
-    
-    $cust_id = mysqli_query($con,"SELECT `customer_id` FROM `despatch` WHERE `despatch_id` =".$fetch_desp_id['despatch_id']) ;
-    $fetch_cust_id = mysqli_fetch_array($cust_id);
-    $desp_cust_id = $fetch_cust_id['customer_id'];
-
-    $cust_existing = mysqli_query($con,"SELECT d.`customer_id` FROM waytrip_items w, despatch d WHERE w.`waytrip_id`='$wid' AND d.`customer_id`=".$fetch_cust_id['customer_id']);
-    $fetch_cust_existing = mysqli_num_rows($cust_existing);
-
-    $route = mysqli_query($con,"SELECT * FROM `route` WHERE `waytrip_id`= '$wid' ");
-    $fetch_route = mysqli_fetch_array($route);
-    $rid = $fetch_route['route_id'];
-
-    $route_items = mysqli_query($con,"SELECT * FROM `route_items` WHERE `route_id`='$rid' ");
-
-    $warehouse = mysqli_query($con,"SELECT `latitude`, `longitude` FROM `warehouse` WHERE `warehouse_id` =".$fetch_route['warehouse_id']);
-    $fetch_wh = mysqli_fetch_array($warehouse);
-    $w_lat = $fetch_wh['latitude'];
-    $w_long = $fetch_wh['longitude'];
-    $w_ll = $w_lat.','.$w_long;
-  
   $sql = mysqli_query($con,"DELETE FROM `waytrip_items` WHERE `id`= '$wtid' ");
+  
   if($sql) {
     $waytrip_items = mysqli_query($con,"SELECT * FROM `waytrip_items` WHERE `waytrip_id`= '$wid' ");
     $num_wt_items = mysqli_num_rows($waytrip_items);
     $update_waytrip = mysqli_query($con,"UPDATE `waytrip` SET `total_orders`= '$num_wt_items' WHERE `waytrip_id` = '$wid'");
 
+    // Check whether the customer has another order //// 
+
+    if($fetch_cust_existing == 1) {
+
+      $route = mysqli_query($con,"SELECT * FROM `route` WHERE `waytrip_id`= '$wid' ");
+      $fetch_route = mysqli_fetch_array($route);
+      $rid = $fetch_route['route_id'];
+  
+      $route_items = mysqli_query($con,"SELECT * FROM `route_items` WHERE `route_id`='$rid' ");
+  
+      $warehouse = mysqli_query($con,"SELECT `latitude`, `longitude` FROM `warehouse` WHERE `warehouse_id` =".$fetch_route['warehouse_id']);
+      $fetch_wh = mysqli_fetch_array($warehouse);
+      $w_lat = $fetch_wh['latitude'];
+      $w_long = $fetch_wh['longitude'];
+      $w_ll = $w_lat.','.$w_long;
+
     
-    while($rt_items = mysqli_fetch_assoc($route_items)) {
-      $cid = $rt_items['customer_id'];
-      $lat = $rt_items['latitude'];
-      $long = $rt_items['longitude'];
-      $latlong = $lat.(','.$long); 
-      $ref_array[$cid]  = $latlong;
-      $distance[] = $rt_items['distance_from_prev'];
-      $det_time = $fetch_route['detention_time'];
-      $avg_speed = $fetch_route['avg_speed'];
-      if(($rt_items['is_fixed']==1) && ( $cid != $desp_cust_id ) ) {
-        $checked_id[] = $cid;
-        $checked_ll[] = $latlong;
-      } elseif(($rt_items['is_fixed']==0) && ( $cid != $desp_cust_id )) {
-        $unchecked_id[] = $cid;
-        $unchecked_ll[] = $latlong;
-      }
-    }
-    // print_r($checked_ll);
-    // print_r($unchecked_ll);
-    
-    
-    if(!empty($checked_id)) {
-      $ini_ll = $checked_ll[(count($checked_ll)-1)];
-      $ini_id = $checked_id[(count($checked_id)-1)];
-      $first_distance = array_slice($distance,0,count($checked_id)) ;
-    } else {
-      $ini_ll = $w_ll;
-      $first_distance = array_slice($distance,0,1) ;
-    }
-
-    if($fetch_route['return_to_warehouse'] == 1) {
-      $unchecked_ll[] = $w_ll;
-    }
-
-    $array_to_opt = $unchecked_ll;
-    array_unshift($array_to_opt,$ini_ll);
-    $data_arr = json_encode($array_to_opt);
-    // print_r($data_arr);
-
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk');
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($ch, CURLOPT_POST, 1);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, "{ \"locations\": ".$data_arr." }");
-
-      $headers = array();
-      $headers[] = 'Content-Type: application/json';
-      $headers[] = 'Accept: application/json';
-      curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-      $result = curl_exec($ch);
-      // print_r($result);
-      
-      curl_close($ch);
-
-      $dec_res = json_decode($result,true);
+        while($rt_items = mysqli_fetch_assoc($route_items)) {
+          $cid = $rt_items['customer_id'];
+          $lat = $rt_items['latitude'];
+          $long = $rt_items['longitude'];
+          $latlong = $lat.(','.$long); 
+          $ref_array[$cid]  = $latlong;
+          // $distance[] = $rt_items['distance_from_prev'];
+          $det_time = $fetch_route['detention_time'];
+          $avg_speed = $fetch_route['avg_speed'];
+          if(($rt_items['is_fixed']==1) && ( $cid != $desp_cust_id ) ) {
+            $checked_id[] = $cid;
+            $checked_ll[] = $latlong;
+            // print_r($checked_ll);
+          } elseif(($rt_items['is_fixed']==0) && ( $cid != $desp_cust_id )) {
+            $unchecked_id[] = $cid;
+            $unchecked_ll[] = $latlong;
+          }
+        }
+       
+        // print_r($unchecked_ll);
+        // echo "comp chkd";
 
 
-      $locSeq = $dec_res['route']['locationSequence'];
-      
-      if($fetch_route['return_to_warehouse'] == 1) {
-        array_pop($locSeq);
-      }
-      array_shift($locSeq);
-      // if(empty($checked_id)) {
-      //   echo "empty";
-      //   array_shift($locSeq);
-      // }
-      
-      for($i = 0; $i<count($locSeq); $i++) {
-        $k = $locSeq[$i];
-        $kth_val = $array_to_opt[$k];
-        $optimized_arr[] = $kth_val;
-        $optimized_id[] = array_search($kth_val,$ref_array);
-        $optimized_ll[] = $ref_array[array_search($kth_val,$ref_array)];
-      }
-      // print_r($optimized_id);
-      // print_r($optimized_ll);
-      $legs = $dec_res['route']['legs'];
-      $dis = []; 
-      for($p = 0; $p < count($legs);$p++) {
-        $dis[] = $legs[$p]['distance'];
-      }
-      
-      $pointDistance = array_merge($first_distance,$dis);
-      
-      // array_shift($optimized_id);
-      // array_shift($optimized_ll);
-      if(!empty($checked_id)){
-        $complete_id = array_merge($checked_id,$optimized_id);
-        $complete_ll = array_merge($checked_ll,$optimized_ll);
-      } else {
-        $complete_id = $optimized_id;
-      }
+        $starting_points = [];
+        if(!empty($checked_ll)) {
+          
+          $starting_points = $checked_ll;
+          array_unshift($starting_points , $w_ll);
+          for($i=0; $i < count ($starting_points); $i++ ) {
+            $adj_points = [];
+            $first = $starting_points[$i]; 
+            if(!empty($starting_points[$i+1])) {
+              $adj_points[] = $first;
+              $sec = $starting_points[$i+1];
+              $adj_points[] = $sec;
+            }
+            $data_arr = json_encode($adj_points);
 
-      $delete_route_items = mysqli_query($con,"DELETE FROM `route_items` WHERE `route_id`='$rid' ");
-      
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, "{ \"locations\": ".$data_arr." }");
 
-      for($i=0; $i<count($complete_id); $i++) { 
-        $is_fixed = '0'; 
-        $det_time = (int) $det_time;
-        $avg_speed = (int)$avg_speed;
-        $dis_from_prev = $pointDistance[$i];
-        $dis_from_prev = (int) $dis_from_prev;
-        $delay = ($dis_from_prev/$avg_speed)*60;
-        $delay += $det_time;
-        $delay = $delay*60;
-        $id = $complete_id[$i];
-        $latlong = $ref_array[$id];
-        $ll = explode(',',$latlong);
-        $lat = $ll['0'];
-        $long = $ll['1'];
-        $item_order = $i+1;
+            $headers = array();
+            $headers[] = 'Content-Type: application/json';
+            $headers[] = 'Accept: application/json';
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        if(in_array($id, $checked_id)) {
-          $is_fixed = '1';
-        } 
+            $result = curl_exec($ch);
+
+            curl_close($ch);
+            $dec_res_checkd = json_decode($result,true);
+            // print_r($dec_res);
+            if(!empty($starting_points[$i+1])) {
+            $distance_checked[] = $dec_res_checkd['route']['distance'];
+            }
+
+
+          }
+        }
+        // print_r($distance_checked);
+        // echo "<br/>";
         
-        $insert_items = mysqli_query($con,"INSERT INTO `route_items`(`route_id`, `customer_id`, `is_fixed`, `item_order`, `latitude`, `longitude`,`delay`,`distance_from_prev`)
-                        VALUES('$rid','$id','$is_fixed','$item_order','$lat','$long','$delay','$dis_from_prev') ");
+        
+        if(!empty($checked_id)) {
+          $ini_ll = $checked_ll[(count($checked_ll)-1)];
+          $ini_id = $checked_id[(count($checked_id)-1)];
+          // $first_distance = array_slice($distance,0,count($checked_id)) ;
+        } else {
+          $ini_ll = $w_ll;
+          // $first_distance = array_slice($distance,0,1) ;
+        }
+        
 
-      }
-      if($insert_items) {
-        return 1;
-      }
+        if($fetch_route['return_to_warehouse'] == 1) {
+          $unchecked_ll[] = $w_ll;
+        }
+        // echo $w_ll;
+        // echo count($unchecked_ll) ;
+        // print_r($unchecked_ll); echo "start of unchekd";
+
+        if((count($unchecked_ll) == 1 && $unchecked_ll[0] == $w_ll) || (count($unchecked_ll) == 0) ) {
+          
+          $delete_route_items = mysqli_query($con,"DELETE FROM `route_items` WHERE `route_id`='$rid' ");
+        } else {
+
+        $array_to_opt = $unchecked_ll;
+        array_unshift($array_to_opt,$ini_ll);
+        $data_arr = json_encode($array_to_opt);
+        // print_r($data_arr);
+
+          $ch = curl_init();
+          curl_setopt($ch, CURLOPT_URL, 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk');
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+          curl_setopt($ch, CURLOPT_POST, 1);
+          curl_setopt($ch, CURLOPT_POSTFIELDS, "{ \"locations\": ".$data_arr." }");
+
+          $headers = array();
+          $headers[] = 'Content-Type: application/json';
+          $headers[] = 'Accept: application/json';
+          curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+          $result = curl_exec($ch);
+          // print_r($result);
+          
+          curl_close($ch);
+
+          $dec_res = json_decode($result,true);
+
+          $locSeq = $dec_res['route']['locationSequence'];
+          
+          if($fetch_route['return_to_warehouse'] == 1) {
+            array_pop($locSeq);
+          }
+          array_shift($locSeq);
+          // if(empty($checked_id)) {
+          //   echo "empty";
+          //   array_shift($locSeq);
+          // }
+          
+          for($i = 0; $i<count($locSeq); $i++) {
+            $k = $locSeq[$i];
+            $kth_val = $array_to_opt[$k];
+            $optimized_arr[] = $kth_val;
+            $optimized_id[] = array_search($kth_val,$ref_array);
+            $optimized_ll[] = $ref_array[array_search($kth_val,$ref_array)];
+          }
+          // print_r($optimized_id);
+          // print_r($optimized_ll);
+          $legs = $dec_res['route']['legs'];
+          for($p = 0; $p < count($legs);$p++) {
+            $distance_unchecked[] = $legs[$p]['distance'];
+          }
+
+          // print_r($distance_unchecked);
+          // echo "<br/>";
+
+          // Distance in km ////
+          $pointDistance = array_merge($distance_checked,$distance_unchecked);
+          $totalDistance = array_sum($pointDistance);
+          // print_r($pointDistance);
+          
+          // array_shift($optimized_id);
+          // array_shift($optimized_ll);
+          if(!empty($checked_id)){
+            $complete_id = array_merge($checked_id,$optimized_id);
+            $complete_ll = array_merge($checked_ll,$optimized_ll);
+          } else {
+            $complete_id = $optimized_id;
+          }
+
+          $delete_route_items = mysqli_query($con,"DELETE FROM `route_items` WHERE `route_id`='$rid' ");
+          
+          
+          for($i=0; $i<count($complete_id); $i++) { 
+            $is_fixed = '0'; 
+            $det_time = $det_time;
+            $avg_speed = $avg_speed;
+            $dis_from_prev = (double)$pointDistance[$i];
+            // $dis_from_prev = (int) $dis_from_prev;
+            $delay = ((double)$dis_from_prev / (double)$avg_speed)*60;
+            $delay += $det_time;
+            $delay = $delay*60;
+            // $totalTime = (double)$totalTime + (double)$delay;
+            $id = $complete_id[$i];
+            $latlong = $ref_array[$id];
+            $ll = explode(',',$latlong);
+            $lat = $ll['0'];
+            $long = $ll['1'];
+            $item_order = $i+1;
+
+            if(in_array($id, $checked_id)) {
+              $is_fixed = '1';
+            } 
+            
+            $insert_items = mysqli_query($con,"INSERT INTO `route_items`(`route_id`, `customer_id`, `is_fixed`, `item_order`, `latitude`, `longitude`,`delay`,`distance_from_prev`)
+                            VALUES('$rid','$id','$is_fixed','$item_order','$lat','$long','$delay','$dis_from_prev') ");
+
+          }
+          $totalTime = '';
+          $pointTime = [];
+          for($i=0;$i<count($pointDistance);$i++){
+
+            $dis_from_prev = (double)$pointDistance[$i];
+            // $dis_from_prev = (int) $dis_from_prev;
+            $delay = ((double)$dis_from_prev / (double)$avg_speed)*60;
+            $delay += $det_time;
+            $delay = $delay*60;
+            $pointTime[] = $delay;
+
+          }
+          // print_r($pointTime);
+          $totalTime = array_sum($pointTime);
+
+          // convert total time to HMS ///
+          
+          // $totalHms = gmdate('H:i:s', $totalTime[0]);
+          $h = floor($totalTime/3600) ;
+          $m = floor(($totalTime/60) % 60 );
+          $s = floor($totalTime % 60);
+
+          if($h < 10) {
+            $h = '0'.$h;
+          }
+          if($m < 10) {
+            $m = '0'.$m;
+          }
+          if($s < 10) {
+            $s = '0'.$s;
+          }
+
+          $totalTime = $h.':'.$m.':'.$s;
+          
+
+          // End convert total time to HMS ///
 
 
+          // Update route ////
+          date_default_timezone_set("Asia/Dubai");
+          $date = date('H:i:s', time());
+          $date2 = date('Y-m-d', time());
+          $date3 = date('Y-m-d H:i:s', time());
 
+          $update_root = mysqli_query($con,"UPDATE `route` SET `total_distance`='$totalDistance',`total_time`='$totalTime',`time_stamp`='$date3' WHERE `route_id` = '$rid' ");
+          
+          // End Update route ////
+          
 
+          if($update_root) {
+            return 1;
+          }
 
+        }
 
+    }
+
+    return 1;
   }
 }
 
@@ -865,16 +983,14 @@ function addWarehouse($isedit,$whid,$whname,$lng,$ltd){
   
   $stmt = mysqli_query($con,$sql);
 
-      
-  // Verify user password and set $_SESSION
-  if ( $stmt) {
+    if ( $stmt) {
 
-  return 1;
+    return 1;
 
-  
-  }else{
-  return 0;
-}
+    
+    }else{
+    return 0;
+    }
   }else{
     return 2;
   }
@@ -913,7 +1029,7 @@ function aeCustomerLatlong($chgf,$cid,$lat,$long){
   
 }
 
-function saveRoute ($saveRouteId,$checkedArr,$tempLatlong,$whId,$wtId,$rtwh,$enTraffic,$totalDistance,$avgSpeed,$detTime,$totalRouteTime,$eta,$pointDistance,$pointTime ) {
+function saveRoute ($saveRouteId,$checkedArr,$tempLatlong,$whId,$wtId,$rtwh,$enTraffic,$totalDistance,$avgSpeed,$detTime,$totalRouteTime,$pointDistance,$pointTime ) {
   session_start();
   $con = con();
   $whId = mysqli_real_escape_string($con,$whId);
@@ -970,7 +1086,7 @@ function saveRoute ($saveRouteId,$checkedArr,$tempLatlong,$whId,$wtId,$rtwh,$enT
     $lat = $ll['0'];
     $long = $ll['1'];
     $item_order = $i+1;
-    $item_eta = $eta[$i];
+    // $item_eta = $eta[$i];
     if(in_array($id,$fixed)){
      $is_fixed = '1';
     } else { $is_fixed = '0'; }
@@ -1008,7 +1124,7 @@ function getUnAssignedItems() {
   return json_encode($res);
 }
 
-function addItemsToDriver($wtid,$desp_id) {
+function addItemsToDriver($wtid,$desp_id) { 
     session_start();
     $con = con();
     $uid = $_SESSION['user_id'];
@@ -1032,6 +1148,8 @@ function addItemsToDriver($wtid,$desp_id) {
     $first_distance = [];
     $id_not_in_route = [];
     $all_route_items = [];
+    $distance_checked = [];
+    $distance_unchecked = [];
 
 
     foreach($desp_id as $did) {
@@ -1049,6 +1167,13 @@ function addItemsToDriver($wtid,$desp_id) {
     $fetch_route = mysqli_query($con,"SELECT `route_id`, `waytrip_id`, `driver_id`, `warehouse_id`, `return_to_warehouse`, `enable_traffic`, `total_distance`, `avg_speed`, `detention_time`, `total_time`, `time_stamp`, `created_by`, `created_at` FROM `route` WHERE `waytrip_id` = '$wtId' ");
     $route = mysqli_fetch_array($fetch_route);
     $rid = $route['route_id'];
+    $wid = $route['warehouse_id'];
+
+    $warehouse = mysqli_query($con,"SELECT `latitude`, `longitude` FROM `warehouse` WHERE `warehouse_id` = '$wid' ");
+    $fetch_wh = mysqli_fetch_array($warehouse);
+    $w_lat = $fetch_wh['latitude'];
+    $w_long = $fetch_wh['longitude'];
+    $wh_latlong = $w_lat.','.$w_long;
 
     $route_items_id = mysqli_query($con,"SELECT  `customer_id` FROM `route_items` WHERE `route_id` = '$rid' ");
       while($items_id = mysqli_fetch_array($route_items_id)) {
@@ -1062,15 +1187,14 @@ function addItemsToDriver($wtid,$desp_id) {
       $fetch_cust = mysqli_fetch_array($customer);
       $cust_id =  $fetch_cust['customer_id'];
       
-      if(in_array($cust_id,$all_route_items)) {
-        // echo '';
-      } else {
+      if(!in_array($cust_id,$all_route_items) && !in_array($cust_id,$id_not_in_route)) {
         $id_not_in_route[] = $cust_id;
-      }
+      } 
       
     }
     
-    $id_not_in_route = array_unique($id_not_in_route);
+    // $id_not_in_route = array_unique($id_not_in_route);
+    
 
     if(!empty($id_not_in_route)) {
       
@@ -1085,7 +1209,7 @@ function addItemsToDriver($wtid,$desp_id) {
           $long = $items_row['longitude'];
           $ll = $lat.','.$long;
           $ref_arr[$cid] = $ll;
-          $distance[] = $items_row['distance_from_prev'];
+          // $distance[] = $items_row['distance_from_prev'];
         if($items_row['is_fixed']==1) {
           $checked_ll[] = $ll;
           $checked_id [] = $cid;
@@ -1095,49 +1219,92 @@ function addItemsToDriver($wtid,$desp_id) {
         }
       }
       
-      if($items_row['return_to_warehouse'] == 0) {
+      if($route['return_to_warehouse'] == 0 && count($unchecked_ll) > 0 ) {
         $last_ll = $unchecked_ll[count($unchecked_ll)-1];
         $last_id = $unchecked_id[count($unchecked_id)-1];
         array_pop($unchecked_ll);
         array_pop($unchecked_id);
+      } else {
+        $last_ll = $wh_latlong;
       }
-      
-      
-      for($j = 0; $j<count($id_not_in_route); $j++) {
-        $cust_id = $id_not_in_route[$j];
-        array_push($unchecked_id,$cust_id);
-        $latlong = mysqli_query($con,"SELECT `latitude`,`longitude` FROM `customer` WHERE `cust_id`='$cust_id' ");
-        $fetch_latlong = mysqli_fetch_array($latlong);
-        $new_lat =  $fetch_latlong['latitude'];
-        $new_long =  $fetch_latlong['longitude'];
-        $new_latlong = $new_lat.','.$new_long;
-        array_push($unchecked_ll,$new_latlong);
-        $ref_arr[$cust_id] = $new_latlong;
 
-      }
       
-      if(!empty($last_id)) {
+      
+        for($j = 0; $j<count($id_not_in_route); $j++) {
+          $cust_id = $id_not_in_route[$j];
+          array_push($unchecked_id,$cust_id);
+          $latlong = mysqli_query($con,"SELECT `latitude`,`longitude` FROM `customer` WHERE `cust_id`='$cust_id' ");
+          $fetch_latlong = mysqli_fetch_array($latlong);
+          $new_lat =  $fetch_latlong['latitude'];
+          $new_long =  $fetch_latlong['longitude'];
+          $new_latlong = $new_lat.','.$new_long;
+          array_push($unchecked_ll,$new_latlong);
+          $ref_arr[$cust_id] = $new_latlong;
+
+        }
+      
+      
         array_push($unchecked_ll,$last_ll);
         array_push($unchecked_id,$last_id);
-      }
+
+      
       if(!empty($checked_id)) {
         $ini_ll = $checked_ll[(count($checked_ll)-1)];
         $ini_id = $checked_id[(count($checked_id)-1)];
-        $first_distance = array_slice($distance,0,count($checked_id)) ;
+        // $first_distance = array_slice($distance,0,count($checked_id)) ;
       } else {
-        $warehouse = mysqli_query($con,"SELECT `latitude`, `longitude` FROM `warehouse` WHERE `warehouse_id` = '$wid' ");
-        $fetch_wh = mysqli_fetch_array($warehouse);
-        $w_lat = $fetch_wh['latitude'];
-        $w_long = $fetch_wh['longitude'];
-        $ini_ll = $w_lat.','.$w_long;
-        $first_distance = array_slice($distance,0,1) ;
+        $ini_ll = $wh_latlong;
+        // $first_distance = array_slice($distance,0,1) ;
       }
+      
+
+      $starting_points = [];
+      if(!empty($checked_ll)) {
+        
+        $starting_points = $checked_ll;
+        array_unshift($starting_points , $wh_latlong);
+        for($i=0; $i < count ($starting_points); $i++ ) {
+          $adj_points = [];
+          $first = $starting_points[$i]; 
+          if(!empty($starting_points[$i+1])) {
+            $adj_points[] = $first;
+            $sec = $starting_points[$i+1];
+            $adj_points[] = $sec;
+          }
+          $data_arr = json_encode($adj_points);
+
+          $ch = curl_init();
+          curl_setopt($ch, CURLOPT_URL, 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk');
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+          curl_setopt($ch, CURLOPT_POST, 1);
+          curl_setopt($ch, CURLOPT_POSTFIELDS, "{ \"locations\": ".$data_arr." }");
+
+          $headers = array();
+          $headers[] = 'Content-Type: application/json';
+          $headers[] = 'Accept: application/json';
+          curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+          $result = curl_exec($ch);
+
+          curl_close($ch);
+          $dec_res_checkd = json_decode($result,true);
+          // print_r($dec_res);
+          if(!empty($starting_points[$i+1])) {
+          $distance_checked[] = $dec_res_checkd['route']['distance'];
+          }
+
+
+        }
+      }
+
+      // print_r($distance_checked);
+
+
+
 
       $array_to_opt = $unchecked_ll;
       array_unshift($array_to_opt,$ini_ll);
       $data_arr = json_encode($array_to_opt);
-      // print_r($data_arr);
-      
       
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, 'http://open.mapquestapi.com/directions/v2/optimizedroute?key=8xGh2RLW6ZtzPegw9gVbv4MFasaSZ6nk');
@@ -1159,7 +1326,7 @@ function addItemsToDriver($wtid,$desp_id) {
 
       $locSeq = $dec_res['route']['locationSequence'];
 
-      if($items_row['return_to_warehouse'] == 1) {
+      if($route['return_to_warehouse'] == 1) {
         array_pop($locSeq);
       }
       array_shift($locSeq);
@@ -1171,14 +1338,17 @@ function addItemsToDriver($wtid,$desp_id) {
         $optimized_id[] = array_search($kth_val,$ref_arr);
         $optimized_ll[] = $ref_arr[array_search($kth_val,$ref_arr)];
       }
+
       $legs = $dec_res['route']['legs'];
-      $dis = []; 
       
       for($p = 0; $p < count($legs);$p++) {
-        $dis[] = $legs[$p]['distance'];
+        $distance_unchecked[] = $legs[$p]['distance'];
       }
+
       
-      $pointDistance = array_merge($first_distance,$dis);
+      $pointDistance = array_merge($distance_checked,$distance_unchecked);
+      $totalDistance = array_sum($pointDistance);
+      
       
       // array_shift($optimized_id);
       // array_shift($optimized_ll);
@@ -1192,16 +1362,17 @@ function addItemsToDriver($wtid,$desp_id) {
       
       $delete_route_items = mysqli_query($con,"DELETE FROM `route_items` WHERE `route_id`='$rid' ");
       
-
+      
       for($i=0; $i<count($complete_id); $i++) { 
-        $is_fixed = '0'; 
-        $det_time = (int) $det_time;
-        $avg_speed = (int)$avg_speed;
+        $is_fixed = '0';  
+        $det_time = $det_time;
+        $avg_speed = $avg_speed;
         $dis_from_prev = $pointDistance[$i];
-        $dis_from_prev = (int) $dis_from_prev;
-        $delay = ($dis_from_prev/$avg_speed)*60;
+        // $dis_from_prev = (int) $dis_from_prev;
+        $delay = ((double)$dis_from_prev / (double)$avg_speed)*60;
         $delay += $det_time;
         $delay = $delay*60;
+        // $totalTime = (double)$totalTime + (double)$delay;
         $id = $complete_id[$i];
         $latlong = $ref_arr[$id];
         $ll = explode(',',$latlong);
@@ -1217,7 +1388,54 @@ function addItemsToDriver($wtid,$desp_id) {
                         VALUES('$rid','$id','$is_fixed','$item_order','$lat','$long','$delay','$dis_from_prev') ");
 
       }
-      if($insert_items) {
+
+      $totalTime = '';
+      $pointTime = [];
+      for($i=0;$i<count($pointDistance);$i++) {
+
+        $dis_from_prev = $pointDistance[$i];
+        $delay = ((double)$dis_from_prev / (double)$avg_speed)*60;
+        $delay += $det_time;
+        $delay = $delay*60;
+        $pointTime[] = $delay;
+
+      }
+
+      $totalTime = array_sum($pointTime);
+      // convert total time to HMS ///
+      
+      // $totalHms = gmdate('H:i:s', $totalTime[0]);
+      $h = floor($totalTime/3600) ;
+      $m = floor(($totalTime/60) % 60 );
+      $s = floor($totalTime % 60);
+
+      if($h < 10) {
+        $h = '0'.$h;
+      }
+      if($m < 10) {
+        $m = '0'.$m;
+      }
+      if($s < 10) {
+        $s = '0'.$s;
+      }
+
+      $totalTime = $h.':'.$m.':'.$s;
+
+      // End convert total time to HMS ///
+
+
+      // Update route ////
+      date_default_timezone_set("Asia/Dubai");
+      $date = date('H:i:s', time());
+      $date2 = date('Y-m-d', time());
+      $date3 = date('Y-m-d H:i:s', time());
+
+      $update_root = mysqli_query($con,"UPDATE `route` SET `total_distance`='$totalDistance',`total_time`='$totalTime',`time_stamp`='$date3' WHERE `route_id` = '$rid' ");
+      
+      // End Update route ////
+      
+
+      if($update_root) {
         return 1;
       }
 

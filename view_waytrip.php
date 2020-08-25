@@ -133,13 +133,13 @@ $oid=$_SESSION['org'];
                 if (data == "1") {
                     swal({
                         title: 'Yaay!',
-                        text: "Order deleted successfully!",
+                        text: "Waytrip deleted successfully!",
                         type: 'success',
                         padding: '2em'
                     });
                     getorgs();
                 } else {
-                    alert("order deletion failed!");
+                    alert("Waytrip deletion failed!");
                 }
 
             },
