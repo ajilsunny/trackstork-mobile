@@ -178,6 +178,7 @@ $wid = $_GET['wid'];
                         
                             let tempDelay = data['route'][i]['delay'];
                                 tempDelay = tempDelay/60;
+                                // tempDelay = tempDelay;
                             // time to HRS format    
                             var mins_num = tempDelay;
                             var hours = Math.floor(mins_num / 60);
