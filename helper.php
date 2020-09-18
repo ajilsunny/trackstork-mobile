@@ -76,7 +76,7 @@ function create_org($name,$cper,$email,$cnt,$username,$password){
  
   
   $stmt = mysqli_query($con,$sql);
-
+  
       
   // Verify user password and set $_SESSION
   if ( $stmt) {
@@ -141,22 +141,16 @@ if($crt){
 function getorgs(){
   $con=con();
 
- 
-  
    $sql="SELECT o.`organization_id`,o.`organization_name`,o.`contact_person`,o.`email_id`,o.`rl`, u.`username`,u.`password` FROM `organization` o,`tbl_user` u WHERE u.`organization_id`=o.`organization_id` and u.`user_type`=1";
-  
   
   $stmt = mysqli_query($con,$sql);
   $res=array();
   while($user = mysqli_fetch_assoc($stmt)){
-$res[]=$user;
+    $res[]=$user;
   }
-      
-
+    
   return json_encode($res);
  
-
-  
 }
 
 function getcust(){
@@ -164,20 +158,16 @@ function getcust(){
   session_start();
   $oid=$_SESSION['org'];
   
-   $sql="SELECT `cust_id`,`cust_name`,`cust_num`,`contact_person`,`mobile`,`email` FROM `customer` WHERE `org_id`=$oid";
-  
+  $sql="SELECT `cust_id`,`cust_name`,`cust_num`,`contact_person`,`mobile`,`email` FROM `customer` WHERE `org_id`=$oid";
   
   $stmt = mysqli_query($con,$sql);
   $res=array();
   while($user = mysqli_fetch_assoc($stmt)){
-$res[]=$user;
+    $res[]=$user;
   }
-      
-
-  return json_encode($res);;
+    
+  return json_encode($res);
  
-
-  
 }
 
 
@@ -352,7 +342,7 @@ function driv($isedit,$did,$name,$phone,$address,$uname,$pwd,$sales,$delivery){
   $sales=mysqli_real_escape_string($con, $sales);
   $delivery=mysqli_real_escape_string($con, $delivery);
 
-  $cntl=mysqli_query($con,"SELECT * FROM `tbl_user` WHERE `username`='$uname' AND `reference_id`!='$did'");
+  $cntl=mysqli_query($con,"SELECT * FROM `tbl_user` WHERE `username`='$uname' AND `reference_id`!= '$did'");
 
   if(mysqli_num_rows($cntl)<1){
    
@@ -492,11 +482,24 @@ function delDespatch($did) {
   session_start();
   $con = con();
   $uid = $_SESSION['user_id'];
-  $sql = mysqli_query($con,"DELETE FROM `despatch` WHERE `despatch_id`='$did' AND `imported_by` = '$uid' ");
-  if($sql){
-    return 1;
-  }
+  $did = mysqli_real_escape_string($con,$did);
+
+    $check_desp = mysqli_query($con,"SELECT * FROM route_items r , despatch d,waytrip_items w WHERE d.customer_id = r.customer_id AND d.despatch_id=w.despatch_id AND d.despatch_id = '$did' ");
+    $desp = mysqli_fetch_array($check_desp);
+    $is_desp = mysqli_num_rows($check_desp);
+    if($is_desp>0) {
+      $wtid = $desp['id'];
+      $wid = $desp['waytrip_id'];
+      $res = delWaytripItems($wtid,$wid);
+    }
+
+    $sql = mysqli_query($con,"DELETE FROM `despatch` WHERE `despatch_id`='$did' AND `imported_by` = '$uid' ");
+
+    if($sql) {
+      return 1;
+    } 
 }
+
 function addDespatch($customer,$order_num,$remarks){
   session_start();
   $con = con();
