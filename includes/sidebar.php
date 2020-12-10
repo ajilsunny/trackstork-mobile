@@ -1,13 +1,25 @@
 <nav id="sidebar">
-
+                <?php 
+                    include('helper.php');
+                    $con = con();
+                    $orgid = $_SESSION['org'];
+                    $getorg = mysqli_query($con, "SELECT `organization_name`,`contact_person`,`contact_1`,`contact_2`,`email_id`,`address`,`logo` FROM `organization` WHERE `organization_id`=$orgid");
+                    $org = mysqli_fetch_array($getorg);
+                ?>
                 <ul class="navbar-nav theme-brand flex-row  text-center">
                     <li class="nav-item theme-logo">
                         <a href="#">
-                            <img src="assets/img/lulu logo.png" class="navbar-logo" alt="logo" style="width: 90%">
+                        <?php if($org){ ?>
+                            <img src="uploads/<?php echo $org['logo']; ?>" class="navbar-logo" alt="logo" style="width: 90%">
+                            <?php
+                                }else{
+                            ?>
+                            <img src="assets/img/logo2-old.png" class="navbar-logo" alt="logo" style="width: 90%">
+                        <?php } ?>       
                         </a>
                     </li>
-                   
                 </ul>
+                    
 
                 <ul class="list-unstyled menu-categories" id="accordionExample">
                 <li class="menu">
@@ -77,6 +89,34 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-target"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>                                <span>Despatch</span>
                             </div>
                         </a>
+                    </li>
+                    <li class="menu">
+                        <a href="#dashboard" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                            <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <span>Report</span>
+                            </div>
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </div>
+                        </a>
+                        <ul class="collapse submenu recent-submenu mini-recent-submenu list-unstyled" id="dashboard" data-parent="#accordionExample">
+                            <li>
+                                <a href="customer_dispatch_report.php"> Customer Dispatch Report </a>
+                            </li>
+                            <li>
+                                <a href="dispatch_summary_report.php"> Dispatch Summary Report </a>
+                            </li>
+                            <li>
+                                <a href="trip_wise_summary_report.php"> Trip Wise Summary Report </a>
+                            </li>
+                            <li>
+                                <a href="route_report.php"> Route Report </a>
+                            </li>
+                            <li>
+                                <a href="vehicle_wise_route_report.php"> Vehicle Wise Route Report </a>
+                            </li>
+                        </ul>
                     </li>
                     <?php } ?>
                    

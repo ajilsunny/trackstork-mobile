@@ -2172,7 +2172,7 @@ table .badge-success, table .badge-primary, table .badge-warning, table .badge-d
     display: none;
   }
   div.dataTables_wrapper div.dataTables_filter input {
-    width: 20rem !important;
+    width: 18rem !important;
   }
 
   /* endpage level css */

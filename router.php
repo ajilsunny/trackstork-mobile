@@ -241,6 +241,76 @@ if (isset($_REQUEST['fx'])) {
       $res = getLocationOfAddItems($desp_id);
       echo $res;
       break;
+    case 37:
+      $res = getDriverandwaytripstatus();
+      echo $res;
+      break;
+    case 38:
+      $res = getdriverprogress();
+      echo $res;
+      break;
+    case 39:
+      $res = getorderprogress();
+      echo $res;
+      break;
+    case 40:
+      $from = $_REQUEST['from'];
+      $to = $_REQUEST['to'];
+      $custm_select = $_REQUEST['custm_select'];
+      $res = getcustomerdespatchreport($from,$to,$custm_select);
+      echo $res;
+      break;
+    case 41:
+      $from = $_REQUEST['from'];
+      $to = $_REQUEST['to'];
+      $custm_select = $_REQUEST['custm_select'];
+      $res = getdespatchsummaryreport($from,$to,$custm_select);
+      echo $res;
+      break;
+    case 42:
+      $from = $_REQUEST['from'];
+      $to = $_REQUEST['to'];
+      $custm_select = $_REQUEST['custm_select'];
+      $res = gettripwisesummaryreport($from,$to,$custm_select);
+      echo $res;
+      break;
+    case 43:
+      $from = $_REQUEST['from'];
+      $to = $_REQUEST['to'];
+      $res = getroutereport($from,$to);
+      echo $res;
+      break;
+    case 44:
+      $from = $_REQUEST['from'];
+      $drive_select = $_REQUEST['drive_select'];
+      $res = getvehiclewiseroutereport($from,$drive_select);
+      echo $res;
+      break;
+    case 45:
+      $sort_day = $_REQUEST['sort_day'];
+      $res = gettotaldelivary_graph($sort_day);
+      echo $res;
+      break;
+    case 46:
+      $sort_day = $_REQUEST['sort_day'];
+      $res = gettopdrivers_graph($sort_day);
+      echo $res;
+      break;
+    case 47:
+      $sort_day = $_REQUEST['sort_day'];
+      $res = gettopcustomer_graph($sort_day);
+      echo $res;
+      break;
+    case 48:
+      $res = gettodays_graph();
+      echo $res;
+      break;
+    case 49:
+      $from = $_REQUEST['from'];
+      $to = $_REQUEST['to'];
+      $res = getdelivered_orders($from,$to);
+      echo $res;
+      break;
     default:
       echo 0;
       break;

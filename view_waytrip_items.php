@@ -1,7 +1,7 @@
 <?php
 include('includes/title.php');
-include('helper.php');
-$con = con();
+// include('helper.php');
+// $con = con();
 $oid = $_SESSION['org'];
 $wid = $_GET['wid'];
 ?>

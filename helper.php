@@ -158,7 +158,7 @@ function getcust(){
   session_start();
   $oid=$_SESSION['org'];
   
-  $sql="SELECT `cust_id`,`cust_name`,`cust_num`,`contact_person`,`mobile`,`email` FROM `customer` WHERE `org_id`=$oid";
+  $sql="SELECT `cust_id`,`cust_name`,`cust_num`,`contact_person`,`mobile`,`email` FROM `customer` WHERE `org_id`=$oid order by cust_name ASC";
   
   $stmt = mysqli_query($con,$sql);
   $res=array();
@@ -464,7 +464,7 @@ function getDespatch() {
   $uid = $_SESSION['user_id'];
   $oid = $_SESSION['org'];
   $res= [];
-  $sql = mysqli_query($con,"SELECT * FROM despatch JOIN customer ON despatch.customer_id = customer.cust_id WHERE `imported_by` = '$uid' AND `org_id`='$oid'  ");
+  $sql = mysqli_query($con,"SELECT * FROM despatch JOIN customer ON despatch.customer_id = customer.cust_id WHERE `imported_by` = '$uid' AND `org_id`='$oid' AND is_delivered =0 ");
   while($desp_data = mysqli_fetch_assoc($sql)) {
     $desp_id = $desp_data['despatch_id'];
     $sql_assigned = mysqli_query($con,"SELECT * FROM `waytrip_items` WHERE `despatch_id`= $desp_id");
@@ -735,7 +735,7 @@ function delWaytripItems($wtid,$wid) {
           // $first_distance = array_slice($distance,0,count($checked_id)) ;
         } else {
           $ini_ll = $w_ll;
-          // $first_distance = array_slice($distance,0,1) ;
+          // $first_distance = array_slice($distance,0,1);
         }
         
 
@@ -1495,5 +1495,451 @@ function getLocationOfAddItems($desp_id) {
     }
   }
   return json_encode($cname);
+}
 
+function getDriverandwaytripstatus()
+{
+  session_start();
+  $oid = $_SESSION['org'];
+  $con = con();
+  $drivers=mysqli_query($con,"SELECT * FROM `driver` WHERE org_id=$oid");
+  $res = [];
+  while($row = mysqli_fetch_assoc($drivers)) {
+    $id=$row['id'];
+    $runningstatus=mysqli_query($con,"SELECT * FROM `waytrip` WHERE driver_id=$id AND trip_start_time IS NOT NULL AND trip_end_time IS NULL");
+    if(mysqli_num_rows($runningstatus)>0)
+    {
+      $row['status']='<label class="text-danger">Out For Delivary</label>';
+    }
+    else
+    {
+      $row['status']='<label class="text-success">Not Out For Delivary</label>';
+    }
+    $res[] = $row;
+  }
+  return json_encode($res);
+}
+
+function getdriverprogress()
+{
+  session_start();
+  $oid = $_SESSION['org'];
+  $con = con();
+  $res = [];
+  $html = '';
+  $persentage=0;
+  $color=['danger','success','primary','warning','info','secondary','dark','light'];
+  $drivers=mysqli_query($con,"SELECT * FROM `waytrip`, driver WHERE driver_id=id AND org_id=$oid AND trip_start_time IS NOT NULL AND trip_end_time IS NULL");
+  while($row = mysqli_fetch_assoc($drivers)) {
+    $waytrip=$row['waytrip_id'];
+    $code=$color[array_rand($color)];
+    $totalcount=mysqli_query($con,"SELECT COUNT(wi.id) as totalcount FROM waytrip as w, driver as d,waytrip_items as wi WHERE w.driver_id=d.id AND w.waytrip_id=wi.waytrip_id AND wi.waytrip_id=$waytrip AND org_id=$oid AND trip_start_time IS NOT NULL AND trip_end_time IS NULL");
+    $row1 = mysqli_fetch_assoc($totalcount);
+    $rowtotalcount=$row1['totalcount'];
+
+    $delivered=mysqli_query($con,"SELECT COUNT(wi.id) as deliveredcount FROM waytrip as w, driver as d,waytrip_items as wi WHERE w.driver_id=d.id AND w.waytrip_id=wi.waytrip_id AND wi.waytrip_id=$waytrip AND org_id=$oid AND trip_start_time IS NOT NULL AND trip_end_time IS NULL AND is_delivered=1");
+    $row2 = mysqli_fetch_assoc($delivered);
+    $rowdelivered=$row2['deliveredcount'];
+
+    $persentage=round((100*$rowdelivered)/$rowtotalcount);
+
+    $html.='<div class="browser-list">
+    <div class="w-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    </div>
+    <div class="w-browser-details">
+        
+        <div class="w-browser-info">
+            <h6>'.$row['name'].'</h6>
+            <p class="browser-count">'.$rowdelivered.' / '.$rowtotalcount.'</p>
+        </div>
+
+        <div class="w-browser-stats">
+            <div class="progress">
+                <div class="progress-bar bg-gradient-'.$code.'" role="progressbar" style="width: '.$persentage.'%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>';
+  }
+  
+  return json_encode($html);
+}
+
+function getorderprogress()
+{
+  session_start();
+  $oid = $_SESSION['org'];
+  $con = con();
+  $data=[];
+
+  $activetrip=mysqli_query($con,"SELECT COUNT(*) as count FROM `waytrip`, driver WHERE driver_id=id AND org_id=$oid AND trip_start_time IS NOT NULL AND trip_end_time IS NULL");
+  $row=mysqli_fetch_assoc($activetrip);
+  $active_trip=$row['count'];
+
+  $ordersintransit=mysqli_query($con,"SELECT COUNT(wi.id) as totalcount FROM waytrip as w, driver as d,waytrip_items as wi WHERE w.driver_id=d.id AND w.waytrip_id=wi.waytrip_id AND org_id=$oid AND trip_start_time IS NOT NULL AND trip_end_time IS NULL");
+  $row1 = mysqli_fetch_assoc($ordersintransit);
+  $orders_in_transit=$row1['totalcount'];
+
+  $delivered=mysqli_query($con,"SELECT COUNT(wi.id) as delivered FROM waytrip as w, driver as d,waytrip_items as wi WHERE w.driver_id=d.id AND w.waytrip_id=wi.waytrip_id AND org_id=$oid AND trip_start_time IS NOT NULL AND trip_end_time IS NULL AND is_delivered=1");
+  $row2 = mysqli_fetch_assoc($delivered);
+  $total_delivered=$row2['delivered'];
+
+  $notdelivered=mysqli_query($con,"SELECT COUNT(wi.id) as notdelivered FROM waytrip as w, driver as d,waytrip_items as wi WHERE w.driver_id=d.id AND w.waytrip_id=wi.waytrip_id AND org_id=$oid AND trip_start_time IS NOT NULL AND trip_end_time IS NULL AND is_delivered=0");
+  $row3 = mysqli_fetch_assoc($notdelivered);
+  $not_delivered=$row3['notdelivered'];
+
+  $data['active']=str_pad($active_trip, 2, '0', STR_PAD_LEFT);
+  $data['transit']=str_pad($orders_in_transit, 2, '0', STR_PAD_LEFT);
+  $data['delivered']=str_pad($total_delivered, 2, '0', STR_PAD_LEFT);
+  $data['notdelivered']=str_pad($not_delivered, 2, '0', STR_PAD_LEFT);
+  return json_encode($data);
+}
+
+function getcustomerdespatchreport($from,$to,$custm_select)
+{
+  $where='';
+  session_start();
+  $_SESSION['cust_from']=$from;
+  $_SESSION['cust_to']=$to;
+  $_SESSION['cust_select']=$custm_select;
+  $oid = $_SESSION['org'];
+  $con = con();
+  $data=[];
+  if($custm_select)
+  {
+    $where="AND d.customer_id=$custm_select";
+  }
+  $despatch=mysqli_query($con,"SELECT c.cust_id,c.cust_name,d.order_no,d.remarks,w.waytrip_id,dr.name,d.is_delivered FROM customer as c,despatch as d,waytrip_items as wi,waytrip as w,driver as dr WHERE c.cust_id=d.customer_id AND d.despatch_id=wi.despatch_id AND wi.waytrip_id=w.waytrip_id AND w.driver_id=dr.id AND dr.org_id=$oid $where AND d.despatch_import_timestamp BETWEEN '$from' AND '$to'");
+  while($row=mysqli_fetch_assoc($despatch))
+  {
+    $delivery=$row['is_delivered'];
+    if($delivery==1)
+    {
+      $row['delivered']='Yes';
+    }
+    else
+    {
+      $row['delivered']='No';
+    }
+    $data[]=$row;
+  }
+  return json_encode($data);
+}
+
+function getdespatchsummaryreport($from,$to,$custm_select)
+{
+  $where='';
+  session_start();
+  $_SESSION['des_from']=$from;
+  $_SESSION['des_to']=$to;
+  $_SESSION['des_select']=$custm_select;
+  $oid = $_SESSION['org'];
+  $con = con();
+  $data=[];
+  if($custm_select)
+  {
+    $where="AND d.customer_id=$custm_select";
+  }
+  $despatch=mysqli_query($con,"SELECT c.cust_name,DATE(d.delivery_timestamp) as date,COUNT(d.order_no) as count from despatch d,customer c where c.cust_id = d.customer_id AND COALESCE(d.delivery_timestamp,0) AND c.org_id=$oid AND DATE(d.delivery_timestamp) >='$from' AND DATE(d.delivery_timestamp) <='$to' $where GROUP BY c.cust_name,DATE(d.delivery_timestamp) ORDER BY c.cust_name");
+  while($row=mysqli_fetch_assoc($despatch))
+  {
+    $data[]=$row;
+  }
+  return json_encode($data);
+}
+
+function gettripwisesummaryreport($from,$to,$custm_select)
+{
+  $where='';
+  session_start();
+  $_SESSION['trip_from']=$from;
+  $_SESSION['trip_to']=$to;
+  $_SESSION['trip_select']=$custm_select;
+  $oid = $_SESSION['org'];
+  $con = con();
+  $data=[];
+  if($custm_select)
+  {
+    $where="AND d.customer_id=$custm_select";
+  }
+  $despatch=mysqli_query($con,"SELECT c.cust_name,COUNT(d.order_no) as count,DATE(d.delivery_timestamp) as date,dr.name FROM customer as c,despatch as d,waytrip_items as wi,waytrip as w,driver as dr WHERE c.cust_id=d.customer_id AND d.despatch_id=wi.despatch_id AND wi.waytrip_id=w.waytrip_id AND w.driver_id=dr.id AND COALESCE(d.delivery_timestamp,0) AND dr.org_id=$oid $where AND d.despatch_import_timestamp BETWEEN '$from' AND '$to' GROUP BY c.cust_name,DATE(d.delivery_timestamp) ORDER BY c.cust_name");
+  while($row=mysqli_fetch_assoc($despatch))
+  {
+    $data[]=$row;
+  }
+  return json_encode($data);
+}
+
+function getroutereport($from,$to)
+{
+  $where='';
+  session_start();
+  $_SESSION['route_from']=$from;
+  $_SESSION['route_to']=$to;
+  $oid = $_SESSION['org'];
+  $con = con();
+  $data=[];
+  $report=mysqli_query($con,"SELECT Date(r.time_stamp) as date,name,r.route_id FROM route as r,driver as d WHERE r.driver_id=d.id AND d.org_id=$oid AND r.time_stamp BETWEEN '$from' AND '$to'");
+  while($row=mysqli_fetch_assoc($report))
+  {
+    $route_id=$row['route_id'];
+    $cusomers=mysqli_query($con,"SELECT c.cust_name FROM route as r,route_items as ri,customer as c WHERE r.route_id=ri.route_id AND ri.customer_id=c.cust_id AND r.route_id=$route_id");
+    $names="";
+    while($row1=mysqli_fetch_assoc($cusomers))  
+    {
+      $name=$row1['cust_name'];
+      $names.="$name, ";
+    }
+    $row['route']=$names;
+    $data[]=$row;
+  }
+  return json_encode($data);
+}
+
+function getvehiclewiseroutereport($from,$drive_select)
+{
+  $where='';
+  session_start();
+  $_SESSION['vehicle_from']=$from;
+  $_SESSION['vehicle_drive']=$drive_select;
+  $oid = $_SESSION['org'];
+  $con = con();
+  $data=[];
+  if($drive_select)
+  {
+    $where="AND r.driver_id=$drive_select";
+  }
+  $report=mysqli_query($con,"SELECT c.cust_num,c.cust_name FROM route as r,customer as c, route_items as ri WHERE r.route_id=ri.route_id AND ri.customer_id=c.cust_id AND c.org_id=$oid $where AND Date(r.time_stamp)='$from'");
+  while($row=mysqli_fetch_assoc($report))
+  {
+    $data[]=$row;
+  }
+  return json_encode($data);
+}
+
+function gettotaldelivary_graph($sort_day)
+{
+  session_start();
+  $user_id = $_SESSION['user_id'];
+  $con = con();
+  $values=[];
+  $data=[];
+  if($sort_day==1)
+  {
+
+    $day1=date('Y-m-d');
+    $day2 = date('Y-m-d', strtotime('-6 days'));
+    $date_from = strtotime($day2);
+    $date_to = strtotime($day1);
+    for ($i=$date_from; $i<=$date_to; $i+=86400)
+    {
+      $values[]=date("l", $i);
+
+      $day=date("Y-m-d", $i);
+      $daily=mysqli_query($con,"SELECT SUM(total_orders) as total_orders FROM waytrip WHERE delivered_orders=1 AND date='$day' AND assigned_by=$user_id");
+      $row=mysqli_fetch_assoc($daily);
+      $data[]=$row['total_orders']!=''?$row['total_orders']:'0';
+    }
+  }
+  elseif($sort_day==2)
+  {
+    $month=date("m");
+    $year=date("Y");
+    $days_no= cal_days_in_month(CAL_GREGORIAN,$month,$year);
+    for($i=1;$i<=$days_no;$i++)
+    {
+      $values[]=$i;
+      $day=date('Y-m-').$i;
+      $daily=mysqli_query($con,"SELECT SUM(total_orders) as total_orders FROM waytrip WHERE delivered_orders=1 AND date='$day' AND assigned_by=$user_id");
+      $row=mysqli_fetch_assoc($daily);
+      $data[]=$row['total_orders']!=''?$row['total_orders']:'0';
+    }
+  }
+  else
+  {
+    for($i=1;$i<=12;$i++)
+    {
+      $values[] = date("M", mktime(0, 0, 0, $i, 10));
+      $year=date('Y');
+      $daily=mysqli_query($con,"SELECT SUM(total_orders) as total_orders FROM waytrip WHERE delivered_orders=1 AND MONTH(date)=$i AND YEAR(date)=$year AND assigned_by=$user_id");
+      $row=mysqli_fetch_assoc($daily);
+      $data[]=$row['total_orders']!=''?$row['total_orders']:'0';
+    }
+  }
+  $result['values']=$values;
+  $result['data']=$data;
+  echo json_encode($result);
+}
+
+function gettopdrivers_graph($sort_day)
+{
+  session_start();
+  $user_id = $_SESSION['user_id'];
+  $con = con();
+  $drives=mysqli_query($con,"SELECT id,name FROM driver WHERE created_by=$user_id");
+  $values=[];
+  $data=[];
+  while($row=mysqli_fetch_assoc($drives))
+  {
+    $drv_id=$row['id'];
+    $name=$row['name'];
+    if($sort_day==1)
+    {
+      $sum=0; 
+      $day1 = date('Y-m-d', strtotime('-6 days'));
+      $day2=date('Y-m-d');
+
+        $daily=mysqli_query($con,"SELECT SUM(total_orders) as total_orders FROM waytrip WHERE delivered_orders=1 AND driver_id=$drv_id AND date BETWEEN '$day1' AND '$day2'");
+        $row=mysqli_fetch_assoc($daily);
+        $data[$name]=$row['total_orders']!=''?$row['total_orders']:'0';
+    }
+    elseif($sort_day==2)
+    {
+      $month=date("m");
+      $year=date("Y");
+      $days_no= cal_days_in_month(CAL_GREGORIAN,$month,$year);
+      $day1=date('Y-m-').'01';
+      $day2=date('Y-m-').$days_no;
+      $daily=mysqli_query($con,"SELECT SUM(total_orders) as total_orders FROM waytrip WHERE delivered_orders=1 AND driver_id=$drv_id AND date BETWEEN '$day1' AND '$day2'");
+      $row=mysqli_fetch_assoc($daily);
+      $data[$name]=$row['total_orders']!=''?$row['total_orders']:'0';
+    } 
+    else
+    {
+      $year=date('Y');
+      $daily=mysqli_query($con,"SELECT SUM(total_orders) as total_orders FROM waytrip WHERE delivered_orders=1 AND YEAR(date)=$year AND driver_id=$drv_id AND MONTH(date) BETWEEN 1 AND 12");
+      $row=mysqli_fetch_assoc($daily);
+      $data[$name]=$row['total_orders']!=''?$row['total_orders']:'0';
+    }
+  }
+  arsort($data);
+  $datas=[];
+  $k=1;
+  foreach($data as $key=>$value)
+   {
+    $values[]=$key;
+    $datas[]=$value;
+    if($k==10)
+    {
+      break;
+    }
+    $k++;
+   }
+  $result['values']=$values;
+  $result['data']=$datas;
+  echo json_encode($result);
+  
+}
+
+function gettopcustomer_graph($sort_day)
+{
+  session_start();
+  $user_id = $_SESSION['user_id'];
+  $con = con();
+  $cusomers=mysqli_query($con,"SELECT cust_id, cust_name FROM `customer` WHERE created_by=$user_id");
+  $values=[];
+  $data=[];
+  while($row=mysqli_fetch_assoc($cusomers))
+  {
+    $cust_id=$row['cust_id'];
+    $name=$row['cust_name'];
+    if($sort_day==1)
+    {
+      $sum=0;
+      $day1 = date('Y-m-d', strtotime('-6 days'));
+      $day2=date('Y-m-d');  
+        $daily=mysqli_query($con,"SELECT COUNT(*) as total_orders FROM customer as c,despatch as d WHERE d.customer_id=c.cust_id AND c.cust_id=$cust_id AND date(d.despatch_import_timestamp) BETWEEN '$day1' AND '$day2'");
+        $row=mysqli_fetch_assoc($daily);
+        $data[$name]=$row['total_orders']!=''?$row['total_orders']:'0';
+    }
+    elseif($sort_day==2)
+    {
+      $month=date("m");
+      $year=date("Y");
+      $days_no= cal_days_in_month(CAL_GREGORIAN,$month,$year);
+      $day1=date('Y-m-').'01';
+      $day2=date('Y-m-').$days_no;
+      $daily=mysqli_query($con,"SELECT COUNT(*) as total_orders FROM customer as c,despatch as d WHERE d.customer_id=c.cust_id AND c.cust_id=$cust_id AND date(d.despatch_import_timestamp) BETWEEN '$day1' AND '$day2'");
+      $row=mysqli_fetch_assoc($daily);
+      $data[$name]=$row['total_orders']!=''?$row['total_orders']:'0';
+    } 
+    else
+    {
+      $year=date('Y');
+      $daily=mysqli_query($con,"SELECT COUNT(*) as total_orders FROM customer as c,despatch as d WHERE d.customer_id=c.cust_id AND c.cust_id=$cust_id AND YEAR(d.despatch_import_timestamp)=$year AND MONTH(d.despatch_import_timestamp) BETWEEN 1 AND 12");
+      $row=mysqli_fetch_assoc($daily);
+      $data[$name]=$row['total_orders']!=''?$row['total_orders']:'0';
+    }
+  }
+  arsort($data);
+  $datas=[];
+  $k=1;
+  foreach($data as $key=>$value)
+   {
+    $values[]=$key;
+    $datas[]=$value;
+    if($k==10)
+    {
+      break;
+    }
+    $k++;
+   }
+  $result['values']=$values;
+  $result['data']=$datas;
+  echo json_encode($result);
+}
+
+function gettodays_graph()
+{
+  session_start();
+  $user_id = $_SESSION['user_id'];
+  $con = con();
+  $drives=mysqli_query($con,"SELECT id,name FROM driver WHERE created_by=$user_id");
+  $values=[];
+  $data=[];
+  while($row=mysqli_fetch_assoc($drives))
+  {
+    $drv_id=$row['id'];
+    $name=$row['name'];
+      $sum=0;
+      $date = date('Y-m-d'); 
+      $daily=mysqli_query($con,"SELECT SUM(total_orders) as total_orders FROM waytrip WHERE delivered_orders=1 AND driver_id=$drv_id AND date='$date'");
+      $row=mysqli_fetch_assoc($daily);
+      $data[$name]=$row['total_orders']!=''?$row['total_orders']:'0';
+  }
+  arsort($data);
+  $datas=[];
+  $k=1;
+  foreach($data as $key=>$value)
+   {
+    $values[]=$key;
+    $datas[]=$value;
+    if($k==10)
+    {
+      break;
+    }
+    $k++;
+   }
+  $result['values']=$values;
+  $result['data']=$datas;
+  echo json_encode($result);
+}
+
+function getdelivered_orders($from,$to)
+{
+  session_start();
+  $_SESSION['delivered_from']=$from;
+  $_SESSION['delivered_to']=$to;
+  $user_id = $_SESSION['user_id'];
+  $con = con();
+  $data=[];
+  $report=mysqli_query($con,"SELECT c.cust_name,d.despatch_id,d.order_no,d.remarks,dr.name,date(d.delivery_timestamp) as date FROM despatch as d,customer as c,waytrip_items as wi,waytrip as w,driver as dr WHERE d.customer_id=c.cust_id AND d.despatch_id=wi.despatch_id AND wi.waytrip_id=w.waytrip_id AND w.driver_id=dr.id AND d.is_delivered=1 AND w.assigned_by=$user_id AND date(d.delivery_timestamp) BETWEEN '$from' AND '$to'");
+  while($row=mysqli_fetch_assoc($report))
+  {
+    $data[]=$row;
+  }
+  return json_encode($data);
 }

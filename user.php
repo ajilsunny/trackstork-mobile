@@ -42,8 +42,8 @@
                 <div style="width: 100%;padding-right: 15px;padding-left: 15px;margin-right: auto;margin-left: auto;">
 
                     <?php
-                    include('helper.php');
-                    $con=con();
+                    // include('helper.php');
+                    // $con=con();
                     $orgid= $_SESSION['org'];
                     // $getorg=mysqli_query($con,"SELECT `organization_name`,`contact_person`,`contact_1`,`contact_2`,`email_id`,`address`,`logo` FROM `organization` WHERE `organization_id`=$orgid");
                     // $org=mysqli_fetch_array($getorg);

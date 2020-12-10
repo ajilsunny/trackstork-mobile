@@ -253,7 +253,7 @@
                             {
                                 extend: 'excel',
                                 className: 'btn'
-                            },
+                            }
 
                         ]
                     },

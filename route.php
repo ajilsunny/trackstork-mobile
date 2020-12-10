@@ -1,7 +1,7 @@
 <?php
 include('includes/title.php');
-include('helper.php');
-$con = con();
+// include('helper.php');
+// $con = con();
 $oid = $_SESSION['org'];
 $uid = $_SESSION['user_id'];
 $wid = $_GET['wid'];
@@ -605,7 +605,7 @@ $ed = $_REQUEST['ed'];
             // console.log(checkedArr, "ckd")
             // console.log(uncheckedArr,"uckd")
             // console.log(whLatlong,"wh");
-            $('#spinner').css('display', 'block')
+            
             pointDistance = [];
             pointTime = [];
             checkedLatlong = [];
@@ -640,6 +640,7 @@ $ed = $_REQUEST['ed'];
 
 
             if (emptyArr.length == 0) {
+                $('#spinner').css('display', 'block')
 
                 for (var c = 0; c < checkedArr.length; c++) {
                     var ci = checkedArr[c];
@@ -712,9 +713,8 @@ $ed = $_REQUEST['ed'];
                     tempArr.push(lastCustLatlong);
 
                 }
-                // console.log(tempArr,"temp")
+                console.log(tempArr,"temp")
                 formattedObj.locations = tempArr;
-
                 formattedObj = JSON.stringify(formattedObj);
 
                 // console.log(formattedObj,'formattedObj')

@@ -55,8 +55,8 @@ include('includes/title.php');
                     <!-- organization profile -->
                     <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12 layout-top-spacing">
                         <?php
-                        include('helper.php');
-                        $con = con();
+                        // include('helper.php');
+                        // $con = con();
                         $orgid = $_SESSION['org'];
                         $getorg = mysqli_query($con, "SELECT `organization_name`,`contact_person`,`contact_1`,`contact_2`,`email_id`,`address`,`logo` FROM `organization` WHERE `organization_id`=$orgid");
                         $org = mysqli_fetch_array($getorg);
@@ -305,7 +305,7 @@ include('includes/title.php');
                     } else {
                         swal({
                             title: 'oops!',
-                            text: "Password not matching!",
+                            text: "Old password not matching!",
                             type: 'error',
                             padding: '2em'
                         });
